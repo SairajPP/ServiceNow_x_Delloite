@@ -53,7 +53,7 @@ Compliance Officers (`x_eco.officer`) manage the triage, dispatch, and escalatio
 
 ## 3. Legal Case Handler Experience
 
-Legal Case Handlers (`sn_grc.business_user` / `sn_grc.manager`) operate within the ServiceNow Legal Service Delivery / IRM ecosystem.
+Legal Case Handlers (`x_eco.legal_handler`, optionally mapped to `sn_grc.business_user` / `sn_grc.manager` for IRM/LSD plugin compatibility) operate within the ServiceNow Legal Service Delivery / IRM ecosystem.
 
 ### 3.1 Legal Case List View
 - **View Name**: `EcoSentinel Legal View` (Table: `x_eco_legal_case`)
@@ -68,7 +68,7 @@ Legal Case Handlers (`sn_grc.business_user` / `sn_grc.manager`) operate within t
 - **Related Lists Included**:
   - Source Complaint (`x_eco_complaint` - single record list)
   - Source Inspection (`x_eco_inspection` - single record list)
-- **Experience**: Legal handlers work the case through to resolution (fines, remediation). Closing the legal case updates the IRM Risk/Compliance posture for the facility as configured in `irm-legal-config.md`.
+- **Experience**: Legal handlers work the case through to resolution (fines, remediation). Closing the legal case triggers `FL-11: Legal Case Resolution Sync`, which closes the parent complaint and updates the IRM Risk/Compliance posture for the facility as configured in `irm-legal-config.md`.
 
 ---
 

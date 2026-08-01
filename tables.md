@@ -31,7 +31,7 @@ EcoSentinel does **not** need a custom user table. All users (inspectors, office
 ### Citizen Authentication Strategy
 
 Citizens submit complaints **without logging in**. Identification is handled by:
-- A unique auto-generated **Complaint Number** (e.g. `ES-2026-0001`) returned on submission.
+- A unique auto-generated **Complaint Number** (e.g. `ES-20260731-0042`) returned on submission.
 - An **optional email** and **optional phone** captured on the form — used for status-update notifications and for the citizen tracker lookup page.
 - The Service Portal "Track My Complaint" page accepts `complaint number + email` as a lightweight authentication pair.
 - *Future*: If citizen accounts are needed later, create `sys_user` records with the `x_eco.citizen` role and link them via the `opened_by` field inherited from Task.
@@ -52,7 +52,7 @@ Citizens submit complaints **without logging in**. Identification is handled by:
 
 | Field Label | Internal Name | Type | Notes |
 |---|---|---|---|
-| Number | `number` | String (auto) | Auto-generated, e.g. `ES0001001`. Configure prefix to `ES`. |
+| Number | `number` | String (auto) | Auto-generated, e.g. `ES-20260731-0042`. Configure the generator to use the canonical `ES-YYYYMMDD-####` format. |
 | Short description | `short_description` | String | Used as the complaint headline (populated from citizen's category + location). |
 | Description | `description` | Multi-line text | Full citizen narrative of the incident. |
 | State | `state` | Integer (Choice) | **Override the choice list** — see custom state values below. |
@@ -138,6 +138,7 @@ Override the default Task state choice list with the EcoSentinel complaint lifec
 | Report Overdue | `report_overdue` | Boolean | Optional | false | — | Auto-calculated: true if `report_due_date` < today and no report submitted. Adds +15 to risk. |
 | Facility Status | `status` | Choice | Mandatory | `active` | `active` — Active · `suspended` — Suspended · `closed` — Closed | Suspended facilities get flagged on dashboards. |
 | Primary Contact | `primary_contact` | Reference | Optional | — | → `sys_user` | The facility's registered compliance officer (not an EcoSentinel user). |
+| IRM Entity | `irm_entity` | Reference | Optional | — | → `sn_grc_profile` | Optional reference linking facility to IRM GRC Profile for risk indicator integration. |
 
 ---
 
@@ -186,6 +187,7 @@ Same set as Complaint (number, state, assigned_to, assignment_group, opened_at, 
 | AI Generated Report | `ai_report` | Multi-line text (8000) | Optional | — | — | Structured report drafted by the Now Assist Inspection Report Agent from `raw_notes`. |
 | Outcome Summary | `outcome_summary` | String (500) | Optional | — | — | One-line summary for dashboard display. |
 | Linked Legal Case | `linked_legal_case` | Reference | Optional | — | → `x_eco_legal_case` | Auto-populated when a Legal Case is created from this inspection. |
+| Urgency Score | `urgency_score` | Integer | Optional | — | — | Virtual field, computed by Script Include, not persisted. Used for prioritization. |
 
 ---
 
@@ -203,7 +205,7 @@ Same set as Complaint (number, state, assigned_to, assignment_group, opened_at, 
 | Field Label | Internal Name | Type | Mandatory | Default | Reference / Choice Values | Notes |
 |---|---|---|---|---|---|---|
 | Parent Inspection | `parent_inspection` | Reference | Mandatory | — | → `x_eco_inspection` | Links the finding to its inspection. |
-| Finding Number | `finding_number` | Integer | Mandatory | Auto-increment | — | Sequence within the inspection (1, 2, 3…). |
+| Finding Number | `finding_number` | Integer | Mandatory | Auto-increment | — | Sequence within the inspection (1, 2, 3…). Auto-incremented by Business Rule on insert. |
 | Finding Type | `finding_type` | Choice | Mandatory | — | `photo_evidence` — Photo Evidence · `measurement` — Measurement Reading · `observation` — Visual Observation · `sample_collected` — Sample Collected · `document` — Document / Permit Check | Categorizes what kind of evidence this is. |
 | Description | `description` | Multi-line text (2000) | Mandatory | — | — | What the inspector observed. |
 | Photo | `photo` | Attachment | Optional | — | — | GPS-tagged photo from Now Mobile camera. |
@@ -275,7 +277,7 @@ Same set as Complaint (number, state, assigned_to, assignment_group, opened_at, 
 | Agent Type | `agent_type` | Choice | Mandatory | — | `native` — Native (Now Assist) · `external` — External (AI Agent Fabric) | Distinguishes native vs. governed external agents. |
 | Linked Record Table | `linked_table` | String (80) | Mandatory | — | — | The table name of the record acted upon (e.g. `x_eco_complaint`). |
 | Linked Record ID | `linked_record` | String (32) | Mandatory | — | — | `sys_id` of the record the agent acted upon. |
-| Linked Record Number | `linked_record_number` | String (40) | Optional | — | — | Human-readable number (e.g. `ES0001001`) for dashboard display. |
+| Linked Record Number | `linked_record_number` | String (40) | Optional | — | — | Human-readable number (e.g. `ES-20260731-0042`) for dashboard display. |
 | Input Summary | `input_summary` | Multi-line text (4000) | Mandatory | — | — | What data the agent received (e.g. "Image: dense_smoke.jpg; Citizen text: 'thick black smoke from chimney'; AQI: 210; Wind: 2 km/h"). |
 | Output Summary | `output_summary` | Multi-line text (4000) | Mandatory | — | — | What the agent decided/produced (e.g. "Severity: HIGH, Confidence: 91%, Rationale: …"). |
 | Confidence Score | `confidence` | Integer | Optional | — | — | 0–100 if applicable. |
@@ -321,15 +323,7 @@ These use built-in ServiceNow capabilities — no new tables required, but they 
 
 ### SLA Definitions (OOB `task_sla` / `contract_sla`)
 
-Create three SLA Definition records tied to the `x_eco_complaint` table:
-
-| SLA Name | Target Table | Start Condition | Duration | Breach Action |
-|---|---|---|---|---|
-| High Severity Response | `x_eco_complaint` | `ai_severity` = High AND `state` = AI Verified | 24 hours | Set `sla_breached` = true; notify assignment group |
-| Medium Severity Response | `x_eco_complaint` | `ai_severity` = Medium AND `state` = AI Verified | 72 hours | Set `sla_breached` = true; notify assignment group |
-| Low Severity Response | `x_eco_complaint` | `ai_severity` = Low AND `state` = AI Verified | 7 days | Set `sla_breached` = true |
-
-**Stop Condition** for all three: `state` changes to `Inspector Assigned` or later.
+Do not create complaint-level SLA Definition records. The sole canonical SLA source is `sla-definitions.md`, which defines the inspection-level SLA records on `x_eco_inspection`: `EcoSentinel Inspection - High Severity`, `EcoSentinel Inspection - Medium Severity`, and `EcoSentinel Inspection - Low Severity`.
 
 ### Assignment Groups (OOB `sys_user_group`)
 

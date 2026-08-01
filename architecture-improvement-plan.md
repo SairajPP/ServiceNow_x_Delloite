@@ -21,6 +21,9 @@ The main improvement is not adding more features. It is clarifying ownership, re
 | Agent logging owner | FastAPI explicit POST plus `SF-03` for native agents | Avoids double-logging the same external decision. |
 | Integration auth | OAuth preferred; Basic Auth acceptable for PDI only | Improves production posture while preserving hackathon practicality. |
 | Audit immutability | ACL denial plus before-rule abort | More realistic than relying on "Nobody" as an implementation detail. |
+| Severity Fusion runtime | FastAPI backend (external, Fabric-registered) | Native Now Assist agents cannot directly call multiple external APIs (Weather + AQI) and fuse results; FastAPI orchestrates this, then registers with Fabric for governance. |
+| High-risk facility alert | SF-02 Subflow (single owner) | BR-F02 disabled or logging-only to prevent duplicate alerts. |
+| OpenAI Vision output | Plain text from OpenAI, wrapped by FastAPI adapter into `{ "caption": "..." }` | Ensures consistent schema for downstream processing and ServiceNow field mapping. |
 
 ## Clean Runtime Flow
 

@@ -59,7 +59,7 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 ```json
 {
   "sys_id": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
-  "number": "ES20260731-0042",
+  "number": "ES-20260731-0042",
   "table": "x_eco_complaint",
   "lat": 18.9629,
   "lng": 72.8277
@@ -101,7 +101,7 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 {
   "result": {
     "sys_id": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
-    "number": "ES20260731-0042",
+    "number": "ES-20260731-0042",
     "description": "Thick black smoke emitting from the factory boiler chimney since morning. It has a chemical smell.",
     "incident_category": "air_pollution",
     "incident_lat": "18.962900",
@@ -269,7 +269,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 {
   "result": {
     "sys_id": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
-    "number": "ES20260731-0042",
+    "number": "ES-20260731-0042",
     "ai_severity": "high",
     "state": "2"
   }
@@ -336,7 +336,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
   "agent_type": "external",
   "linked_table": "x_eco_complaint",
   "linked_record": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
-  "linked_record_number": "ES20260731-0042",
+  "linked_record_number": "ES-20260731-0042",
   "input_summary": "Image: 'dense black smoke stack'. Citizen text: 'Thick black smoke from boiler chimney'. AQI: 210. Wind speed: 1.5 km/h.",
   "output_summary": "Severity: HIGH. Confidence: 91%. Rationale: Pollutants accumulating due to low wind speed under high AQI conditions.",
   "confidence": 91,
@@ -366,10 +366,10 @@ We log the agent decision as a **separate POST call** to the Table API rather th
 |---|---|---|---|---|
 | `ai_severity` | `x_eco_complaint` | `ai_severity` | Choice | `low`, `medium`, `high` |
 | `ai_confidence` | `x_eco_complaint` | `ai_confidence` | Integer | 0 to 100 |
-| `ai_image_caption` | `x_eco_complaint` | `ai_image_caption` | String | Output from OpenAI Vision |
+| `ai_image_caption` | `x_eco_complaint` | `ai_image_caption` | String | Output from OpenAI Vision. *Note: OpenAI returns raw plain text. The FastAPI backend acts as an adapter, wrapping this text into a `{ "caption": "..." }` schema before processing.* |
 | `ai_rationale` | `x_eco_complaint` | `ai_rationale` | String | Human-readable reasoning string |
 | `ai_classified_at` | `x_eco_complaint` | `ai_classified_at` | Date/Time | `yyyy-MM-dd HH:mm:ss` |
-| `ai_processing_status` | `x_eco_complaint` | `ai_processing_status` | Choice | `completed`, `failed`, or `fallback` |
+| `ai_processing_status` | `x_eco_complaint` | `ai_processing_status` | Choice | `not_started`, `queued`, `processing`, `completed`, `failed`, or `fallback` |
 | `sys_id` | `x_eco_env_snapshot` | `parent_complaint` | Reference | sys_id of Complaint record |
 | `aqi_value` | `x_eco_env_snapshot` | `aqi_value` | Integer | Numeric air quality index |
 | `aqi_category` | `x_eco_env_snapshot` | `aqi_category` | Choice | Map to bands: `good`, `moderate`, `very_unhealthy`, etc. |
@@ -395,7 +395,7 @@ We log the agent decision as a **separate POST call** to the Table API rather th
    - Setup Http Header: `Authorization` pointing to a Scoped Connection/Credential Alias.
 3. **Integration User Account**:
    - Create user `ecosentinel.api` with `Web service access only` marked `true`.
-   - Assign the user to the `EcoSentinel - System Administrators` group (or directly grant the `x_eco.integration_user` role).
+   - Grant only the least-privilege `x_eco.integration_user` role to `ecosentinel.api`; do not add this account to the `EcoSentinel - System Administrators` group.
 4. **Table API Endpoint Verification**:
    - Ensure the endpoints `/api/now/table/x_eco_complaint`, `/api/now/table/x_eco_env_snapshot`, and `/api/now/table/x_eco_agent_log` are active in the application's configuration settings.
 5. **Cross-Scope Privilege Records**:
@@ -433,3 +433,4 @@ We log the agent decision as a **separate POST call** to the Table API rather th
 | **Malformed / Missing Photo** | No image attachment is found. | FastAPI detects empty array in attachment query, skips the OpenAI Vision payload, and skips image analysis. | The Severity Fusion Agent evaluates using coordinates + text description only. |
 | **ServiceNow Authentication Failure** | FastAPI fails to fetch details or write back. | FastAPI logs a `401 Unauthorized` error and sends alert email notification to the sys admin. | The complaint remains in "Received" state. After 60 minutes, `FL-02` triggers the fallback to "Medium" severity. |
 | **Duplicate Webhook Fire** | Webhook ping fires multiple times. | FastAPI checks SQLite/Redis cache for duplicate `sys_id` processing. Returns `409 Conflict` immediately if already running. | The duplicate flow run terminates cleanly without spawning secondary analysis. |
+| **Attachment Upload Race Condition** | FL-01 webhook fires before photo is uploaded. | N/A - prevented at source. | Service Portal widget uploads photo FIRST, then creates complaint record. Alternatively, FL-01 includes conditional check or brief delay to ensure attachment exists before webhook dispatch. Documented explicitly in the failure mode table and portal widget specification. |

@@ -125,7 +125,7 @@ Build these **first** — they are called by multiple parent flows.
 | `agent_type` | Choice | `native` or `external`. |
 | `linked_table` | String | Table name of the source record. |
 | `linked_record_id` | String | sys_id of the source record. |
-| `linked_record_number` | String | Human-readable number (e.g. `ES0001001`). |
+| `linked_record_number` | String | Human-readable number (e.g. `ES-20260731-0042`). |
 | `input_summary` | String | What the agent received. |
 | `output_summary` | String | What the agent decided. |
 | `confidence` | Integer | 0–100. |
@@ -295,12 +295,12 @@ Query `x_eco_complaint` where:
 
 7. **Flow Logic: Set SLA** — Based on `ai_severity`:
    - **If** `ai_severity = high`:
-     - The OOB Task SLA engine will automatically attach the "High Severity Response" SLA definition (24 hours) based on the condition configured in `tables.md`.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - High Severity` on the created `x_eco_inspection` record.
    - **If** `ai_severity = medium`:
-     - 72-hour SLA attaches automatically.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Medium Severity` on the created `x_eco_inspection` record.
    - **If** `ai_severity = low`:
-     - 7-day SLA attaches automatically.
-   - *Note*: SLA attachment is handled by the OOB SLA engine if the SLA Definitions were configured correctly. No manual flow step needed — just confirm the SLA start condition matches `state = 2 → 3`.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Low Severity` on the created `x_eco_inspection` record.
+   - *Note*: SLA attachment is handled by the OOB SLA engine using the canonical inspection-level definitions in `sla-definitions.md`. No manual flow step is needed.
 
 8. **Action: Send Email** — Notify the assigned inspector:
    - To: `assigned_inspector`
@@ -611,6 +611,36 @@ This flow ensures **every** state transition results in a citizen notification, 
 
 ---
 
+## FL-11: Legal Case Resolution Sync
+
+| Property | Value |
+|---|---|
+| **Type** | Flow |
+| **Trigger** | Record Updated on `x_eco_legal_case` |
+| **Trigger Condition** | `state` changes to `6` (Resolved) OR `state` changes to `7` (Withdrawn) |
+| **Purpose** | When a Legal Case reaches final resolution, updates the linked parent Complaint to its final closed state and notifies the citizen of the outcome. |
+| **Run As** | System |
+
+### Steps
+
+1. **Action: Look Up Record** — Get the source complaint (`legal_case.source_complaint`).
+
+2. **Flow Logic: If** `legal_case.state = 6` (Resolved):
+   - **Action: Update Record** on complaint:
+     - `state = 8` (Closed)
+     - Add to `comments` (citizen-visible): `"Legal enforcement action has been completed. Resolution: ${legal_case.resolution_notes}"`
+   - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"Legal action has been resolved. Thank you for your report."`
+
+3. **Flow Logic: Else If** `legal_case.state = 7` (Withdrawn):
+   - **Action: Update Record** on complaint:
+     - `state = 8` (Closed)
+     - Add to `comments` (citizen-visible): `"Legal case was withdrawn. The matter has been closed."`
+   - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"This matter has been closed. Thank you for reporting."`
+
+4. **Action: Add Work Note** to legal case — `"Complaint ${complaint.number} automatically closed due to legal case resolution."`
+
+---
+
 # Flow Summary Matrix
 
 | ID | Name | Type | Trigger | Key Output |
@@ -629,6 +659,7 @@ This flow ensures **every** state transition results in a citizen notification, 
 | FL-08 | Inspection Report Agent | Flow | Inspection findings submitted | AI-drafted inspection report |
 | FL-09 | Citizen Status Update | Flow | Complaint state changes | Citizen notification at every transition |
 | FL-10 | Leadership Weekly Insights | Flow | Scheduled (weekly) | Executive summary email |
+| FL-11 | Legal Case Resolution Sync | Flow | Legal Case state → 6 or 7 | Parent complaint closed and citizen notified |
 
 ---
 

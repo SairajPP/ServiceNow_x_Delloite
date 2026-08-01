@@ -212,22 +212,55 @@
 | **Trigger** | Update |
 | **Condition** | `current.state.changes() && !current.citizen_email.nil()` |
 | **Order** | 500 |
-| **Purpose** | (Deprecated) Send an email to the citizen at each major status transition. Replaced by `FL-09` to prevent duplicate emails. |
+| **Purpose** | Disabled fallback only. Citizen-facing email is sent by Flow `SF-01` Send Email actions called from `FL-01`, `FL-05`, `FL-09`, and `FL-11`; this rule must not fire email in the canonical build. |
 
-**Why needed**: The core pitch promise is "citizen never loses visibility". Without proactive notifications, the citizen has to manually check the tracker portal, which defeats the purpose.
+**Why retained**: Keep this disabled server-side pattern only as an emergency fallback reference. The canonical build sends citizen-facing email through `SF-01`, not through events or this Business Rule.
 
 **Logic / Pseudocode**:
 ```javascript
 // (function executeRule(current, previous) {
-//     DEPRECATED: Notification logic is now handled exclusively by Flow Designer (FL-09).
+//     DEPRECATED: Notification logic is now handled exclusively by Flow Designer SF-01.
 //     This business rule is disabled to prevent duplicate webhook/email events.
 // })(current, previous);
 ```
 
-**Paired Event Registration**:
-- **Event Name**: `x_eco.citizen_status_update`
-- **Table**: `x_eco_complaint`
-- **Notification**: Create an email notification triggered by this event. Template includes `${number}`, `${state}`, and a link to the tracker portal page.
+**Canonical owner**: `SF-01` sends the actual citizen-facing email. Do not register `x_eco.citizen_status_update` as an active email event in the hackathon build.
+
+---
+
+### BR-FN01: Auto-Increment Finding Number
+
+| Property | Value |
+|---|---|
+| **Table** | `x_eco_finding` |
+| **When** | Before |
+| **Trigger** | Insert |
+| **Order** | 100 |
+| **Purpose** | Auto-generate sequential `finding_number` within each inspection (1, 2, 3, …) to track individual evidence items. |
+
+**Why needed**: Each photo, measurement, or observation captured on Now Mobile creates a distinct finding record. Without auto-numbering, the inspector would have to manually count findings, which is error-prone and slows field data entry.
+
+**Caution**: Count-based numbering can produce duplicate or reused `finding_number` values if findings are deleted or inserted concurrently; use a GlideRecord-safe auto-number field / Number Maintenance record if time allows. This is acceptable risk for a hackathon demo where deletions are unlikely.
+
+**Logic / Pseudocode**:
+```javascript
+(function executeRule(current, previous) {
+    if (!current.parent_inspection.nil()) {
+        // Count existing findings for this inspection
+        var ga = new GlideAggregate('x_eco_finding');
+        ga.addQuery('parent_inspection', current.parent_inspection);
+        ga.addAggregate('COUNT');
+        ga.query();
+        
+        var currentMax = 0;
+        if (ga.next()) {
+            currentMax = parseInt(ga.getAggregate('COUNT')) || 0;
+        }
+        
+        current.finding_number = currentMax + 1;
+    }
+})(current, previous);
+```
 
 ---
 
@@ -333,21 +366,20 @@
 | **Trigger** | Update |
 | **Condition** | `current.high_risk.changes() && current.high_risk == true` |
 | **Order** | 200 |
-| **Purpose** | Notify the Compliance Officers group when a facility crosses the critical threshold (80+) so they can initiate a priority inspection. |
+| **Active?** | **No, disabled by default** |
+| **Purpose** | (Deprecated) Notify the Compliance Officers group when a facility crosses the critical threshold (80+). Replaced by `SF-02` to prevent duplicate alerts. |
 
-**Why needed**: A facility breaching the critical threshold is the single strongest signal for proactive enforcement. Without an alert, officers would only notice when manually checking the dashboard — by which time further violations may have occurred.
+**Why needed**: A facility breaching the critical threshold is the single strongest signal for proactive enforcement. The Flow `SF-02` is the single active owner of this alert. This Business Rule is disabled or converted to logging-only to avoid duplicate notification.
 
 **Logic / Pseudocode**:
 ```javascript
-(function executeRule(current, previous) {
-    gs.eventQueue('x_eco.facility_high_risk', current,
-        current.name.toString(),
-        'Risk score: ' + current.risk_score + ' | Tier: Critical');
-
-})(current, previous);
+// (function executeRule(current, previous) {
+//     DEPRECATED: High-risk alert is now handled exclusively by Subflow SF-02.
+//     This business rule is disabled to prevent duplicate alert notifications.
+// })(current, previous);
 ```
 
-**Paired Notification**: Email to "EcoSentinel — Compliance Officers" group with facility name, score breakdown, and a link to the facility record.
+**Paired Notification**: Email to "EcoSentinel — Compliance Officers" group with facility name, score breakdown, and a link to the facility record (now sent by SF-02 only).
 
 ---
 
@@ -1190,10 +1222,10 @@ EcoInspectionWorkflow.prototype = {
 | BR-C03 | Handle AI Write-Back | `x_eco_complaint` | Before | Update | `ai_severity` changes and is not empty |
 | BR-C04 | Prevent State Regression | `x_eco_complaint` | Before | Update | `state` changes |
 | BR-C05 | Timestamp Status Transitions | `x_eco_complaint` | Before | Update | `state` changes |
-| BR-C06 | Citizen Notification | `x_eco_complaint` | After | Update | `state` changes and `citizen_email` not empty |
+| BR-C06 | Citizen Notification | `x_eco_complaint` | After | Update | **Disabled by default; fallback only. `SF-01` owns citizen-facing email** |
 | BR-C07 | Update Facility Complaint Count | `x_eco_complaint` | After | Insert | `linked_facility` not empty |
 | BR-F01 | Recalculate Risk Score | `x_eco_facility` | Before | Update | `violations_12m`, `complaints_90d`, or `report_overdue` changes |
-| BR-F02 | High-Risk Facility Alert | `x_eco_facility` | After | Update | `high_risk` changes to true |
+| BR-F02 | High-Risk Facility Alert | `x_eco_facility` | After | Update | **Disabled by default; `SF-02` owns high-risk alerts** |
 | BR-F03 | Check Report Overdue | Scheduled Job | Daily 02:00 | — | Scans all active facilities |
 | BR-F04 | Refresh 90-Day Count | Scheduled Job | Daily 03:00 | — | Scans all active facilities |
 | BR-I01 | Prevent Orphan Inspection | `x_eco_inspection` | Before | Insert | `parent_complaint` is empty |

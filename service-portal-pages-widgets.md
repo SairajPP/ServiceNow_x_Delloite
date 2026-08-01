@@ -100,10 +100,12 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 ### Photo Capture
 - **Client-Side**: The `<input type="file" accept="image/*" capture="environment">` tag forces mobile devices to open the rear-facing camera directly, minimizing friction.
 - **Attachment Sequence**: 
-  1. The widget inserts the `x_eco_complaint` record first to generate a `sys_id`.
-  2. The widget immediately makes a REST call to the ServiceNow Attachment API (`/api/now/attachment/file?table_name=x_eco_complaint&table_sys_id=SYS_ID`).
-  3. The file is streamed to the platform. 
-  4. Only once the attachment succeeds does the webhook (`FL-01`) trigger the FastAPI backend. *Note: `FL-01` must have a slight delay or wait condition to ensure the attachment API completes before the webhook fires.*
+  1. The widget uploads the photo FIRST using the ServiceNow Attachment API (`/api/now/attachment/file?table_name=x_eco_complaint&table_sys_id=TEMP_ID` or using a staged upload approach).
+  2. Only after the attachment upload succeeds does the widget create the `x_eco_complaint` record via the widget's server script.
+  3. The FL-01 webhook trigger waits for attachment confirmation (checks that attachments exist before firing the webhook, or includes a brief delay/conditional check).
+  4. This prevents the webhook from firing before the photo is available for FastAPI download.
+
+**Alternative Implementation**: Create the complaint record first to generate a `sys_id`, immediately upload the attachment to that `sys_id`, then have FL-01 include a conditional check or brief delay to ensure attachment exists before webhook dispatch. This is documented explicitly in `integration-contract.md` failure mode table.
 
 ---
 
@@ -111,9 +113,9 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 
 | Portal Form Field | Mapped Table | Internal Field Name | Type | Notes |
 |---|---|---|---|---|
-| Incident Location | `x_eco_complaint` | `location_text` | String | Coordinates or cross-street |
-| Description | `x_eco_complaint` | `short_description` | String | Text describing the pollution |
-| Photo | `sys_attachment` | N/A | File | Attached to the complaint `sys_id` |
+| Incident Location | `x_eco_complaint` | `incident_address` | String | Reverse-geocoded address or manually entered location description. Also captured: `incident_lat` and `incident_lng` for GPS coordinates via HTML5 Geolocation. |
+| Description | `x_eco_complaint` | `description` | Multi-line text | Full citizen narrative of the environmental incident. The `short_description` field is auto-derived by BR-C01 from category + location for list view display. |
+| Photo | `sys_attachment` | N/A | File | Attached to the complaint `sys_id`. Portal must upload photo first, then create/update complaint record only after attachment success to avoid race condition with FL-01 webhook. |
 | Email Address | `x_eco_complaint` | `citizen_email` | String | Used for tracker authentication |
 | Phone Number | `x_eco_complaint` | `citizen_phone` | String | Optional |
 
@@ -126,7 +128,7 @@ Opening a public-facing portal requires strict data security to protect PII and 
 1. **Write-Only ACLs**: Unauthenticated users (the `public` role) are granted Create access to `x_eco_complaint` and `sys_attachment`, but **no Read access** globally. This means a citizen cannot query the table via REST or list views to see other complaints.
 2. **Secure Lookup**: The Tracker Widget requires a composite key (`number` + `citizen_email`). The server script delegates this to a secure Script Include (`SI-02`) running with system privileges to fetch only the requested status string, exposing absolutely no internal data.
 3. **Abuse Prevention**: 
-   - **CAPTCHA**: A Google reCAPTCHA property is configured on the portal to prevent bot submissions.
+   - **CAPTCHA**: Planned for production. For the hackathon build, CAPTCHA is noted as a stated roadmap item. Add one-line note: "Intended approach: Google reCAPTCHA v3 for invisible bot detection, configurable threshold."
    - **Rate Limiting**: An IP-based rate limiter (Before-Insert Business Rule) caps submissions to 5 per hour per IP to protect the external FastAPI/AI budgets.
 
 ---

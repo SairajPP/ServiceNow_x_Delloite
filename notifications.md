@@ -11,11 +11,11 @@
 
 | Notification Name | Trigger Event / Table Action | Recipient | Channel | Fired From |
 |---|---|---|---|---|
-| **Citizen: Complaint Received** | Event: `x_eco.citizen_status_update` (State = 1) | Citizen Email field | Email | `FL-01` (Flow) |
-| **Citizen: Status Transition** | Event: `x_eco.citizen_status_update` (State 2–5) | Citizen Email field | Email | `FL-09` (Flow) |
-| **Citizen: Final Resolution** | Event: `x_eco.citizen_status_update` (State 6–8) | Citizen Email field | Email | `FL-05` (Flow) |
-| **Inspector: New Assignment** | Table: `x_eco_inspection` (Assigned to changes) | `assigned_to` User | Email & Mobile Push | `FL-03` (Flow) |
-| **Inspector: SLA Warning (75%)** | Task SLA SLA Workflow (75% Elapsed) | `assigned_to` User | Email & Mobile Push | `FL-04` (Flow) |
+| **Citizen: Complaint Received** | Trigger: Flow `SF-01` (Send Email action), called by `FL-01` | Citizen Email field | Email | `FL-01` (Flow) |
+| **Citizen: Status Transition** | Trigger: Flow `SF-01` (Send Email action), called by `FL-09` | Citizen Email field | Email | `FL-09` (Flow) |
+| **Citizen: Final Resolution** | Trigger: Flow `SF-01` (Send Email action), called by `FL-05` or `FL-11` | Citizen Email field | Email | `FL-05` / `FL-11` (Flows) |
+| **Inspector: New Assignment** | Table: `x_eco_inspection` (Assigned to changes) | `assigned_to` User | Email & Mobile In-App Notification | `FL-03` (Flow) |
+| **Inspector: SLA Warning (75%)** | Task SLA SLA Workflow (75% Elapsed) | `assigned_to` User | Email & Mobile In-App Notification | `FL-04` (Flow) |
 | **Compliance Officer: High-Risk Alert**| Event: `x_eco.facility_high_risk` | `EcoSentinel — Compliance Officers` Group | Email | `SF-02` (Subflow) |
 | **Compliance Officer: SLA Breach** | Task SLA SLA Workflow (100% Breached) | `EcoSentinel — Compliance Officers` Group | Email | `FL-04` (Flow) |
 | **Legal Handler: Case Assignment** | Table: `x_eco_legal_case` (Insert/Assignment) | `assigned_officer` User | Email | `FL-05` / `FL-07` (Flows) |
@@ -30,7 +30,7 @@
 ## 2.1 — Citizen Notifications (Email)
 
 ### Notification 1: Complaint Received Confirmation
-* **Trigger Event**: `x_eco.citizen_status_update` where event parameter 2 = `"Received"`
+* **Trigger**: Flow `SF-01` (Send Email action), called by `FL-01` with status label `"Received"`
 * **Fired From**: Flow `FL-01`
 * **Recipient**: Citizen Email (`current.citizen_email`)
 * **Subject**: `EcoSentinel: Environmental Incident Report Received - ${number}`
@@ -56,7 +56,7 @@ EcoSentinel Regulatory Compliance Team
 ```
 
 ### Notification 2: Status Transition
-* **Trigger Event**: `x_eco.citizen_status_update` where event parameter 2 IN (`"AI Verified"`, `"Inspector Assigned"`, `"Inspection In Progress"`, `"Inspection Completed"`)
+* **Trigger**: Flow `SF-01` (Send Email action), called by `FL-09` for status labels `"AI Verified"`, `"Inspector Assigned"`, `"Inspection In Progress"`, and `"Inspection Completed"`
 * **Fired From**: Flow `FL-09`
 * **Recipient**: Citizen Email (`current.citizen_email`)
 * **Subject**: `EcoSentinel: Update on Report ${number} - Current Status: ${state}`
@@ -80,7 +80,7 @@ EcoSentinel Regulatory Compliance Team
 ```
 
 ### Notification 3: Final Resolution Notice
-* **Trigger Event**: `x_eco.citizen_status_update` where event parameter 2 IN (`"Action Taken"`, `"Dismissed"`, `"Closed"`)
+* **Trigger**: Flow `SF-01` (Send Email action), called by `FL-05` or `FL-11` for final status labels `"Action Taken"`, `"Dismissed"`, and `"Closed"`
 * **Fired From**: Flow `FL-05`
 * **Recipient**: Citizen Email (`current.citizen_email`)
 * **Subject**: `EcoSentinel: RESOLUTION Notification - Report ${number}`
@@ -109,7 +109,7 @@ To prevent spamming the citizen (e.g. if the status changes from "Received" $\ri
 
 ---
 
-## 2.2 — Inspector Notifications (Email & Mobile Push)
+## 2.2 — Inspector Notifications (Email & Mobile In-App)
 
 ### Notification 1: New Inspection Assignment
 * **Trigger Table**: `x_eco_inspection` (When `assigned_to` is populated)
@@ -164,7 +164,7 @@ If you are delayed due to weather, traffic, or access constraints, please docume
 
 ### Notification 1: High-Risk Facility Alert (Risk Score $\ge$ 80)
 * **Trigger Event**: `x_eco.facility_high_risk`
-* **Fired From**: Subflow `SF-02` (Risk recalculation) or BR `BR-F02`
+* **Fired From**: Subflow `SF-02` (Risk recalculation)
 * **Recipient**: `EcoSentinel — Compliance Officers` Group
 * **Subject**: `⚠️ CRITICAL RISK ALERT: ${name} (Score: ${risk_score})`
 * **Message Template Body**:

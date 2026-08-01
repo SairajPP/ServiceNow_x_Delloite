@@ -94,7 +94,7 @@ The LSD case lifecycle manages enforcement processing.
 
 * **Complaint Status Sync**:
   * When Case state enters **`1` (Case Opened)**: Parent Complaint state is updated to `6` (Action Taken) and `violation_confirmed` is marked `true`.
-  * When Case state enters **`6` (Resolved)**: Parent Complaint state is updated to `8` (Closed) with resolution details mapped to the citizen-facing comments.
+  * When Case state enters **`6` (Resolved)**: `FL-11: Legal Case Resolution Sync` updates the Parent Complaint state to `8` (Closed) with resolution details mapped to the citizen-facing comments.
 
 ---
 

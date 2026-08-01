@@ -58,7 +58,7 @@ While Now Mobile is used for *capturing data on-site*, inspectors need a way to 
 Rather than relying purely on severity, the triage queue is ranked by a calculated 0–100 score. 
 - **Formula**: `(AI Severity Numeric Weight * 0.6) + (Facility Risk Score * 0.4)`
 - **Execution**: This is executed via the **`EcoUrgencyScoreCalculator` (SI-07)** Script Include.
-- **Refresh Frequency**: Because facility risk changes infrequently and AI severity is set once on insert, the Urgency Score is written to a physical integer field (`urgency_score`) on the `x_eco_inspection` table upon creation, allowing the dashboard to query it in **real-time** without heavy on-the-fly math.
+- **Refresh Frequency**: Because facility risk changes infrequently and AI severity is set once on insert, the Urgency Score is calculated on-demand by the Script Include when loading the dashboard (not persisted as a physical field). Alternatively, for performance optimization, it can be written to a virtual calculated field or computed at query time.
 
 ---
 

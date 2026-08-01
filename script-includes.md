@@ -136,8 +136,8 @@ EcoRiskCalculator.prototype = {
 1. `hasOfficerRole()`
    - **Parameters**: None
    - **Returns**: `"true"` or `"false"` (String)
-2. `lookupComplaint()`
-   - **Parameters**: Requires URL parameters `sysparm_number` and `sysparm_email`
+2. `lookupComplaint(params)`
+   - **Parameters**: Server-side callers pass `{ number: 'ES-20260731-0042', email: 'citizen@example.com' }`; GlideAjax portal callers may still provide `sysparm_number` and `sysparm_email`.
    - **Returns**: JSON-formatted string matching the integration schema
 
 ### Logic / Pseudocode
@@ -149,9 +149,10 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
         return gs.hasRole('x_eco.officer') || gs.hasRole('x_eco.admin');
     },
 
-    lookupComplaint: function() {
-        var number = this.getParameter('sysparm_number');
-        var email = this.getParameter('sysparm_email');
+    lookupComplaint: function(params) {
+        params = params || {};
+        var number = params.number || this.getParameter('sysparm_number');
+        var email = params.email || this.getParameter('sysparm_email');
         var result = { found: false };
 
         if (!number || !email) {
@@ -324,7 +325,7 @@ EcoComplaintNumberGenerator.prototype = {
         
         var nextSeq = 1;
         if (gr.next()) {
-            var currentNumber = gr.getValue('number'); // e.g. ES-2026-0731-0042
+            var currentNumber = gr.getValue('number'); // e.g. ES-20260731-0042
             var parts = currentNumber.split('-');
             if (parts.length === 3) {
                 var lastPart = parseInt(parts[2], 10);
@@ -340,7 +341,7 @@ EcoComplaintNumberGenerator.prototype = {
             seqString = '0' + seqString;
         }
         
-        return prefix + seqString;
+        return prefix + seqString; // Returns format: ES-YYYYMMDD-####
     },
 
     type: 'EcoComplaintNumberGenerator'

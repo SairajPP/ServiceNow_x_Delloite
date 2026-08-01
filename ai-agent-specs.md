@@ -13,7 +13,7 @@
 |---|---|---|---|
 | **Triage Agent** | Native — AI Agent Studio | FastAPI classification pipeline step 1 | Extracts category keywords, urgency signals, and pollution type from the citizen's free-text description before fusion. |
 | **OpenAI Vision Agent** | External — registered via AI Agent Fabric | FastAPI classification pipeline step 2 | Analyses the citizen's uploaded photo and returns a structured caption describing the detected environmental issue. |
-| **Severity Fusion Agent** | Native AI Agent Studio or FastAPI reasoning module | FastAPI classification pipeline step 3 | Combines triage output + image caption + live AQI + wind speed into a severity label, confidence score, and explainable rationale. |
+| **Severity Fusion Agent** | External — FastAPI-hosted, Fabric-registered | FastAPI classification pipeline step 3 | Combines triage output + image caption + live AQI + wind speed into a severity label, confidence score, and explainable rationale. Runtime: FastAPI backend orchestrates the reasoning logic (needs to call Weather + AQI external APIs which native Now Assist agents cannot call directly). Registered via AI Agent Fabric for governance and auditability via AI Control Tower. |
 | **Inspection Report Agent** | Native — AI Agent Studio | Inspection state → "Findings Submitted" (via `FL-08`) | Transforms the inspector's raw field notes and findings into a structured professional inspection report. |
 | **Legal Case Summary Agent** | Native — AI Agent Studio | Legal Case created (via `FL-07`) | Compiles complaint details, inspection evidence, environmental snapshot, and facility history into a prosecution-ready case narrative. |
 | **Leadership Insights Agent** | Native — AI Agent Studio (Phase 3 / Stretch) | Scheduled weekly (via `FL-10`) | Generates a plain-language weekly summary from aggregated platform metrics for executive leadership. |
@@ -150,10 +150,12 @@ EXAMPLE OUTPUT:
 
 ### Output Format
 
-Plain text string (not JSON). Example:
+Plain text string (not JSON). The OpenAI API returns raw text. Example:
 ```
 Dense black smoke plume discharging from an active industrial boiler chimney stack.
 ```
+
+**Output Adapter**: FastAPI receives this plain text response from OpenAI and wraps it into the structured schema `{ "caption": "..." }` before passing it to the Severity Fusion Agent and before writing to ServiceNow. This adapter step ensures consistent data structure across the pipeline.
 
 ### Where Output Is Written
 
@@ -180,9 +182,11 @@ Dense black smoke plume discharging from an active industrial boiler chimney sta
 | Property | Value |
 |---|---|
 | **Name** | EcoSentinel Severity Fusion Agent |
-| **Type** | Native — AI Agent Studio (Core Reasoning Agent) |
-| **Trigger** | Called as step 3 of the Orchestrator task `TASK-ECO-CLASSIFY`, after Triage and Vision agents complete. |
-| **Linked Flow** | `FL-01` → Orchestrator → Triage → Vision → **this agent** |
+| **Type** | External — FastAPI-hosted, registered via AI Agent Fabric for governance |
+| **Trigger** | Called as step 3 of the FastAPI backend classification pipeline, after Triage and Vision agents complete. |
+| **Runtime Owner** | FastAPI backend (reasons: needs to combine outputs from Weather API and AQI API alongside vision caption; native Now Assist agents cannot call multiple external APIs directly and fuse their outputs). |
+| **Governance** | Registered with AI Agent Fabric so all decisions are visible via AI Control Tower, preserving the governance story. |
+| **Linked Flow** | `FL-01` sends webhook → FastAPI backend → Triage → Vision → **this agent** → writes back to ServiceNow |
 
 ### Inputs
 
@@ -650,7 +654,7 @@ Every agent decision — native or external — generates a record in the **Agen
 | `agent_type` | Native or External. | `external` |
 | `linked_table` | Table the decision relates to. | `x_eco_complaint` |
 | `linked_record` | sys_id of the specific record. | `8a9b2c3d...` |
-| `linked_record_number` | Human-readable record number. | `ES20260731-0042` |
+| `linked_record_number` | Human-readable record number. | `ES-20260731-0042` |
 | `input_summary` | Snapshot of what the agent received. | `"Image: dense smoke. AQI: 210. Wind: 2 km/h."` |
 | `output_summary` | Snapshot of what the agent decided. | `"Severity: HIGH. Confidence: 91%."` |
 | `confidence` | Numeric confidence score. | `91` |
@@ -696,4 +700,3 @@ This means any auditor can see: the AI said X with Y% confidence because of Z, a
 ### Override Design Principle
 
 > The AI's original output is **never deleted or overwritten** by a human override. Instead, override fields sit *alongside* the AI fields. This ensures the AI Control Tower always has the complete decision history: what the AI decided, what the human decided, and why.
-
