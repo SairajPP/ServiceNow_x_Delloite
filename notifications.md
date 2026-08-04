@@ -9,6 +9,8 @@
 
 # Section 1: Notification Roster
 
+**Note on Mapping (XR-03)**: The table below serves as the consolidated Notification-to-Flow mapping table. It explicitly maps every system notification to the exact Flow Designer Flow or Business Rule that triggers it, ensuring no redundant or missing notifications occur across the incident lifecycle.
+
 | Notification Name | Trigger Event / Table Action | Recipient | Channel | Fired From |
 |---|---|---|---|---|
 | **Citizen: Complaint Received** | Trigger: Flow `SF-01` (Send Email action), called by `FL-01` | Citizen Email field | Email | `FL-01` (Flow) |

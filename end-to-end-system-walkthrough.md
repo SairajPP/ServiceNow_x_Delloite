@@ -2,7 +2,7 @@
 
 > **Scoped Application**: EcoSentinel AI  
 > **Scope Prefix**: `x_eco_`  
-> **Platform**: ServiceNow PDI (Washington DC / Xanadu release)  
+> **Platform**: ServiceNow PDI (Xanadu release)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow  
 > **Purpose**: This document serves as the master narrative tying together all 16 technical specification files. It does not redefine any architecture; rather, it tells the continuous, plain-English story of how a single environmental incident flows through the entire system from discovery to prosecution and executive reporting.
 

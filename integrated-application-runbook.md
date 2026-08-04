@@ -46,7 +46,7 @@ Add these fields before wiring the flows:
 4. Create active Business Rules: `BR-C01`, `BR-C03`, `BR-C04`, `BR-C05`, `BR-C07`, `BR-F01`, `BR-F02`, `BR-F03`, `BR-F04`, `BR-I01`, `BR-I02`, `BR-I03`, `BR-I05`, `BR-I07`, `BR-L01`, `BR-L02`, `BR-A01`, `BR-E01`, `BR-E02`.
 5. Create but keep inactive: `BR-C02`, `BR-I04`, `BR-I06`.
 6. Create subflows: `SF-01`, `SF-02`, `SF-03`, `SF-04`.
-7. Create flows: `FL-01` through `FL-10`.
+7. Create flows: `FL-01` through `FL-11`.
 8. Configure the FastAPI integration from `integration-contract.md`.
 9. Create demo records and run the smoke tests below.
 

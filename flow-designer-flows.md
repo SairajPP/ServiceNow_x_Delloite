@@ -166,7 +166,8 @@ Build these **first** — they are called by multiple parent flows.
 ### Steps
 
 1. **Action: Validate Intake State** — Confirm `state = 1` (Received). If blank, update to `1` and add a work note. This is defensive only; BR-C01 remains the primary owner of insert defaults.
-2. **Action: Integration Hub → REST Step** — Send outbound POST to FastAPI backend.
+2. **Action: Wait for Duration** — Wait for **5 seconds**. This gives the Service Portal widget sufficient time to finish uploading the photo attachment to the new complaint `sys_id` before the webhook fires.
+3. **Action: Integration Hub → REST Step** — Send outbound POST to FastAPI backend.
    - **REST Message**: `x_eco.EcoSentinel_Webhook`
    - **HTTP Method**: `POST`
    - **Endpoint**: `https://[FASTAPI_URL]/webhook/complaint`
@@ -255,8 +256,7 @@ Query `x_eco_complaint` where:
      - **Action: Look Up Record** — Get the facility record → read `zone` field.
      - Set flow variable `dispatch_zone = facility.zone`.
    - **Else**:
-     - **Flow Logic: Script Step** — Determine zone from GPS coordinates using a simple bounding-box lookup or default to `central`.
-     - Set flow variable `dispatch_zone = calculated_zone`.
+     - **Flow Logic: Script Step** — Determine zone from GPS coordinates using a simple bounding-box lookup. If unable to determine, set `dispatch_zone = fallback`.
 
 2. **Flow Logic: Map Zone → Assignment Group** —
    | Zone Value | Group Name |
@@ -266,6 +266,7 @@ Query `x_eco_complaint` where:
    | `east` | EcoSentinel — East Zone Inspectors |
    | `west` | EcoSentinel — West Zone Inspectors |
    | `central` | EcoSentinel — Central Zone Inspectors |
+   | `fallback` | EcoSentinel — Compliance Officers |
    - Set flow variable `target_group` = the resolved group sys_id.
 
 3. **Action: Look Up Records** — Find available inspectors in `target_group`:
@@ -625,19 +626,21 @@ This flow ensures **every** state transition results in a citizen notification, 
 
 1. **Action: Look Up Record** — Get the source complaint (`legal_case.source_complaint`).
 
-2. **Flow Logic: If** `legal_case.state = 6` (Resolved):
+3. **Flow Logic: If** `legal_case.state = 6` (Resolved):
    - **Action: Update Record** on complaint:
      - `state = 8` (Closed)
      - Add to `comments` (citizen-visible): `"Legal enforcement action has been completed. Resolution: ${legal_case.resolution_notes}"`
-   - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"Legal action has been resolved. Thank you for your report."`
+   - **Flow Logic: If** `complaint.citizen_email` is not empty:
+     - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"Legal action has been resolved. Thank you for your report."`
 
-3. **Flow Logic: Else If** `legal_case.state = 7` (Withdrawn):
+4. **Flow Logic: Else If** `legal_case.state = 7` (Withdrawn):
    - **Action: Update Record** on complaint:
      - `state = 8` (Closed)
      - Add to `comments` (citizen-visible): `"Legal case was withdrawn. The matter has been closed."`
-   - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"This matter has been closed. Thank you for reporting."`
+   - **Flow Logic: If** `complaint.citizen_email` is not empty:
+     - **Subflow Call: SF-01 (Send Citizen Notification)** — status = `"Closed"`, message = `"This matter has been closed. Thank you for reporting."`
 
-4. **Action: Add Work Note** to legal case — `"Complaint ${complaint.number} automatically closed due to legal case resolution."`
+5. **Action: Add Work Note** to legal case — `"Complaint ${complaint.number} automatically closed due to legal case resolution."`
 
 ---
 

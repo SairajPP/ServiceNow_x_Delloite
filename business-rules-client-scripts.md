@@ -28,6 +28,10 @@
 **Logic / Pseudocode**:
 ```javascript
 (function executeRule(current, previous) {
+    // Generate unique complaint number
+    var generator = new x_eco.EcoComplaintNumberGenerator();
+    current.number = generator.generateNumber();
+
     // State defaults to "Received" (1)
     current.state = 1;
 
@@ -152,6 +156,9 @@
 (function executeRule(current, previous) {
     var newState = parseInt(current.state);
     var oldState = parseInt(previous.state);
+
+    // Note for Hackathon: "Reopened" state is out of scope. 
+    // Moving from closed states (like Dismissed) to Action Taken is intentionally blocked.
 
     // Allow only forward movement OR admin override
     if (newState < oldState) {
@@ -915,6 +922,10 @@ These are called by business rules, flows, and GlideAjax client scripts.
 | **Client Callable** | false |
 | **Purpose** | Centralized risk score recalculation logic for a facility. Called by BR-C07, FL-05 / EcoInspectionWorkflow, BR-I04 fallback, BR-F03, BR-F04, and Flow Designer. |
 
+> **Canonical Source**: The full implementation with the weighted risk formula lives in [script-includes.md § 2.1](file:///c:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/script-includes.md). The implementation below matches the canonical version exactly.
+>
+> **Architecture Note**: `EcoRiskCalculator.recalculate()` computes the full risk score, risk tier, and high-risk flag internally, then calls `facility.update()`. This triggers BR-F01, which **also** recalculates the score from the input fields as a safety net. Both paths use the same formula, so the result is deterministic and idempotent. BR-F01 exists as a guard to ensure the score is always correct even if a facility record is updated without going through `EcoRiskCalculator`.
+
 **Logic / Pseudocode**:
 ```javascript
 var EcoRiskCalculator = Class.create();
@@ -922,42 +933,83 @@ EcoRiskCalculator.prototype = {
     initialize: function() {},
 
     recalculate: function(facilitySysId) {
+        if (!facilitySysId) return;
+
         var facility = new GlideRecord('x_eco_facility');
         if (!facility.get(facilitySysId)) return;
 
-        // Recount violations in last 12 months
+        var score = 50; // Base score
+
+        // 1. Violation History: +25 per violation in last 12 months (capped at +40)
         var cutoff12m = new GlideDateTime();
         cutoff12m.addDaysUTC(-365);
-        var vGa = new GlideAggregate('x_eco_inspection');
-        vGa.addQuery('inspected_facility', facilitySysId);
-        vGa.addQuery('violation_confirmed', true);
-        vGa.addQuery('sys_created_on', '>=', cutoff12m);
-        vGa.addAggregate('COUNT');
-        vGa.query();
-        var vCount = 0;
-        if (vGa.next()) vCount = parseInt(vGa.getAggregate('COUNT'));
-        facility.violations_12m = vCount;
+        var violations = new GlideAggregate('x_eco_inspection');
+        violations.addQuery('inspected_facility', facilitySysId);
+        violations.addQuery('violation_confirmed', true);
+        violations.addQuery('sys_created_on', '>=', cutoff12m);
+        violations.addAggregate('COUNT');
+        violations.query();
+        var violationCount = 0;
+        if (violations.next()) {
+            violationCount = parseInt(violations.getAggregate('COUNT')) || 0;
+        }
+        facility.setValue('violations_12m', violationCount);
+        score += Math.min(violationCount * 25, 40);
 
-        // Recount complaints in last 90 days
-        var cutoff90d = new GlideDateTime();
-        cutoff90d.addDaysUTC(-90);
-        var cGa = new GlideAggregate('x_eco_complaint');
-        cGa.addQuery('linked_facility', facilitySysId);
-        cGa.addQuery('opened_at', '>=', cutoff90d);
-        cGa.addAggregate('COUNT');
-        cGa.query();
-        var cCount = 0;
-        if (cGa.next()) cCount = parseInt(cGa.getAggregate('COUNT'));
-        facility.complaints_90d = cCount;
-
-        // Check overdue
-        if (!facility.report_due_date.nil()) {
-            var today = new GlideDateTime();
-            var due = new GlideDateTime(facility.report_due_date);
-            facility.report_overdue = due.compareTo(today) < 0;
+        // 2. Sector Risk: +20 points if high-risk sector (chemical/mining)
+        var sector = facility.getValue('sector');
+        if (sector === 'chemical' || sector === 'mining') {
+            score += 20;
         }
 
-        // The before-update BR-F01 will calculate the score when we call update()
+        // 3. Overdue Reports: +15 points if last compliance report is overdue
+        var reportOverdue = false;
+        if (!facility.report_due_date.nil()) {
+            var today = new GlideDateTime();
+            var dueDate = new GlideDateTime(facility.report_due_date);
+            if (dueDate.compareTo(today) < 0) {
+                reportOverdue = true;
+            }
+        }
+        facility.setValue('report_overdue', reportOverdue);
+        if (reportOverdue) {
+            score += 15;
+        }
+
+        // 4. Complaint Frequency: +3 points per complaint in last 90 days (capped at +30)
+        var cutoff90d = new GlideDateTime();
+        cutoff90d.addDaysUTC(-90);
+        var complaints = new GlideAggregate('x_eco_complaint');
+        complaints.addQuery('linked_facility', facilitySysId);
+        complaints.addQuery('opened_at', '>=', cutoff90d);
+        complaints.addAggregate('COUNT');
+        complaints.query();
+        var complaintCount = 0;
+        if (complaints.next()) {
+            complaintCount = parseInt(complaints.getAggregate('COUNT')) || 0;
+        }
+        facility.setValue('complaints_90d', complaintCount);
+        score += Math.min(complaintCount * 3, 30);
+
+        // Final constraints: cap score between 0 and 100
+        score = Math.max(0, Math.min(score, 100));
+        facility.setValue('risk_score', score);
+
+        // Derive Risk Tier and High-Risk Flag
+        var riskTier = 'low';
+        var highRisk = false;
+        if (score >= 80) {
+            riskTier = 'critical';
+            highRisk = true;
+        } else if (score >= 65) {
+            riskTier = 'elevated';
+        } else if (score >= 40) {
+            riskTier = 'standard';
+        }
+        facility.setValue('risk_tier', riskTier);
+        facility.setValue('high_risk', highRisk);
+
+        // Update triggers BR-F01 which validates the same formula as a safety net
         facility.update();
     },
 
@@ -980,10 +1032,16 @@ EcoRiskCalculator.prototype = {
 var EcoComplaintUtils = Class.create();
 EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
 
-    // Called from Citizen Tracker portal widget
-    lookupComplaint: function() {
-        var number = this.getParameter('sysparm_number');
-        var email = this.getParameter('sysparm_email');
+    // Called from Citizen Tracker portal widget (GlideAjax) or Virtual Agent (server-side object)
+    lookupComplaint: function(params) {
+        params = params || {};
+        var number = params.number || this.getParameter('sysparm_number');
+        var email = params.email || this.getParameter('sysparm_email');
+        var result = { found: false };
+
+        if (!number || !email) {
+            return JSON.stringify(result);
+        }
 
         var gr = new GlideRecord('x_eco_complaint');
         gr.addQuery('number', number);
@@ -991,18 +1049,16 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
         gr.query();
 
         if (gr.next()) {
-            var result = {
-                found: true,
-                number: gr.number.toString(),
-                state: gr.state.getDisplayValue(),
-                category: gr.incident_category.getDisplayValue(),
-                ai_severity: gr.ai_severity.getDisplayValue(),
-                opened_at: gr.opened_at.getDisplayValue(),
-                short_description: gr.short_description.toString()
-            };
-            return JSON.stringify(result);
+            result.found = true;
+            result.number = gr.getValue('number');
+            result.state = gr.state.getDisplayValue();
+            result.category = gr.incident_category.getDisplayValue();
+            result.ai_severity = gr.ai_severity.getDisplayValue();
+            result.opened_at = gr.opened_at.getDisplayValue();
+            result.short_description = gr.getValue('short_description');
         }
-        return JSON.stringify({ found: false });
+
+        return JSON.stringify(result);
     },
 
     // Called from officer complaint form to check role
@@ -1210,6 +1266,16 @@ EcoInspectionWorkflow.prototype = {
     type: 'EcoInspectionWorkflow'
 };
 ```
+
+---
+
+### Additional Script Includes
+
+> **Note**: The following Script Includes are fully defined in their canonical location in [script-includes.md](file:///c:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/script-includes.md). They are listed here for completeness.
+
+* **SI-06: EcoComplaintNumberGenerator** — Generates sequential `ES-YYYYMMDD-####` tracking numbers.
+* **SI-07: EcoUrgencyScoreCalculator** — Advanced time-based decay logic for backlog prioritization.
+* **SI-08: EcoSLADueDateCalculator** — Custom SLA duration calculation honoring non-business hours.
 
 ---
 

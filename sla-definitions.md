@@ -35,10 +35,10 @@ SLA definitions are configured in ServiceNow under **Service Level Management âž
 | **Duration** | 1 Day (24 Hours) |
 | **Schedule** | 24 x 7 (No business hours exclusions for emergency high-severity incidents) |
 | **Timezone Source** | The caller's timezone |
-| **Start Condition** | `parent_complaint.ai_severity = high` AND `state = 1` (Scheduled) AND `assigned_to IS NOT EMPTY` |
+| **Start Condition** | `parent_complaint.ai_severity = high` AND `state = 1` (Scheduled) |
 | **Pause Condition** | None (Hackathon scope: inspector field assignments cannot be paused once assigned to prevent SLA manipulation) |
 | **Stop Condition** | `state` is one of: `6` (Completed - Violation Confirmed), `7` (Completed - Dismissed), `8` (Cancelled) |
-| **Reset Condition** | `assigned_to` changes |
+| **Reset Condition** | None |
 
 ### Breach Behaviour & Timeline Visibility
 - **Field Impact**: If the duration passes without reaching a stop condition, the platform sets `task_sla.has_breached = true`, which flags the task index list and updates the `sla_breached` flag on the originating `x_eco_complaint` table.
@@ -58,10 +58,10 @@ SLA definitions are configured in ServiceNow under **Service Level Management âž
 | **Duration Type** | User Specified Duration |
 | **Duration** | 3 Days (72 Hours) |
 | **Schedule** | 24 x 7 |
-| **Start Condition** | `parent_complaint.ai_severity = medium` AND `state = 1` (Scheduled) AND `assigned_to IS NOT EMPTY` |
+| **Start Condition** | `parent_complaint.ai_severity = medium` AND `state = 1` (Scheduled) |
 | **Pause Condition** | None |
 | **Stop Condition** | `state` is one of: `6` (Completed - Violation Confirmed), `7` (Completed - Dismissed), `8` (Cancelled) |
-| **Reset Condition** | `assigned_to` changes |
+| **Reset Condition** | None |
 
 ---
 
@@ -76,7 +76,7 @@ SLA definitions are configured in ServiceNow under **Service Level Management âž
 | **Duration Type** | User Specified Duration |
 | **Duration** | 7 Days |
 | **Schedule** | 24 x 7 |
-| **Start Condition** | `parent_complaint.ai_severity = low` AND `state = 1` (Scheduled) AND `assigned_to IS NOT EMPTY` |
+| **Start Condition** | `parent_complaint.ai_severity = low` AND `state = 1` (Scheduled) |
 | **Pause Condition** | None |
 | **Stop Condition** | `state` is one of: `6` (Completed - Violation Confirmed), `7` (Completed - Dismissed), `8` (Cancelled) |
-| **Reset Condition** | `assigned_to` changes |
+| **Reset Condition** | None |

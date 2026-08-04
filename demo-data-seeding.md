@@ -37,28 +37,28 @@
 
 | Facility Name | Facility ID | Sector | Zone | Address | Lat | Lng | Risk Score | Risk Tier | Violations (12mo) | Complaints (90d) | Report Overdue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Greenfield Chemical Works | FC-2021-0042 | chemical | north | 123 Industrial Parkway, North District | 18.9750 | 72.8258 | 95 | critical | 3 | 8 | true |
-| Doshi Mining Corp | FM-2019-0156 | mining | east | 789 Quarry Road, East District | 19.0176 | 72.8561 | 85 | critical | 2 | 5 | false |
+| Greenfield Chemical Works | FC-2021-0042 | chemical | north | 123 Industrial Parkway, North District | 18.9750 | 72.8258 | 100 | critical | 3 | 8 | true |
+| Doshi Mining Corp | FM-2019-0156 | mining | east | 789 Quarry Road, East District | 19.0176 | 72.8561 | 85 | critical | 0 | 5 | false |
 
 ### 2.2 Elevated-Risk Facilities (Risk Score 65-79)
 
 | Facility Name | Facility ID | Sector | Zone | Address | Lat | Lng | Risk Score | Risk Tier | Violations (12mo) | Complaints (90d) | Report Overdue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Apex Manufacturing Ltd | FF-2020-0089 | manufacturing | south | 456 Factory Lane, South District | 18.9220 | 72.8347 | 70 | elevated | 1 | 4 | false |
-| Central Power Plant | FE-2018-0234 | energy | central | 321 Power Station Rd, Central District | 18.9647 | 72.8194 | 68 | elevated | 1 | 3 | true |
+| Apex Manufacturing Ltd | FF-2020-0089 | manufacturing | south | 456 Factory Lane, South District | 18.9220 | 72.8347 | 77 | elevated | 0 | 4 | true |
+| Central Power Plant | FE-2018-0234 | energy | central | 321 Power Station Rd, Central District | 18.9647 | 72.8194 | 74 | elevated | 0 | 3 | true |
 
 ### 2.3 Standard-Risk Facilities (Risk Score 40-64)
 
 | Facility Name | Facility ID | Sector | Zone | Address | Lat | Lng | Risk Score | Risk Tier | Violations (12mo) | Complaints (90d) | Report Overdue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Metro Construction Co | FC-2022-0371 | construction | west | 555 Builder Ave, West District | 18.9389 | 72.8353 | 55 | standard | 0 | 2 | false |
-| Riverside Waste Management | FW-2021-0199 | waste_management | north | 777 Disposal Drive, North District | 19.0015 | 72.8450 | 50 | standard | 0 | 1 | false |
+| Metro Construction Co | FC-2022-0371 | construction | west | 555 Builder Ave, West District | 18.9389 | 72.8353 | 56 | standard | 0 | 2 | false |
+| Riverside Waste Management | FW-2021-0199 | waste_management | north | 777 Disposal Drive, North District | 19.0015 | 72.8450 | 53 | standard | 0 | 1 | false |
 
 ### 2.4 Low-Risk Facilities (Risk Score 0-39)
 
 | Facility Name | Facility ID | Sector | Zone | Address | Lat | Lng | Risk Score | Risk Tier | Violations (12mo) | Complaints (90d) | Report Overdue |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| GreenTech Solar Farm | FE-2023-0512 | energy | south | 999 Solar Park Rd, South District | 18.9103 | 72.8217 | 30 | low | 0 | 0 | false |
+| GreenTech Solar Farm | FE-2023-0512 | energy | south | 999 Solar Park Rd, South District | 18.9103 | 72.8217 | 50 | standard | 0 | 0 | false |
 
 ---
 
@@ -69,7 +69,7 @@
 | Number | Category | Citizen Name | Citizen Email | Description | Address | Lat | Lng | Linked Facility | AI Severity | AI Confidence | State | Violation Confirmed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ES-20260725-0001 | air_pollution | Anonymous Citizen | citizen1@email.com | "Thick black smoke from factory chimney, chemical smell, children's playground nearby" | 123 Industrial Parkway, North District | 18.9750 | 72.8258 | Greenfield Chemical Works | high | 92 | Inspection Completed | true |
-| ES-20260728-0002 | illegal_dumping | Maria Garcia | maria.g@email.com | "Large drums leaking chemical liquid into creek behind facility" | 789 Quarry Road, East District | 19.0176 | 72.8561 | Doshi Mining Corp | high | 88 | Legal Case Opened | true |
+| ES-20260728-0002 | illegal_dumping | Maria Garcia | maria.g@email.com | "Large drums leaking chemical liquid into creek behind facility" | 789 Quarry Road, East District | 19.0176 | 72.8561 | Doshi Mining Corp | high | 88 | Action Taken | true |
 | ES-20260730-0003 | water_pollution | Anonymous Citizen | citizen3@email.com | "Factory discharge pipe releasing brown wastewater directly into river" | 456 Factory Lane, South District | 18.9220 | 72.8347 | Apex Manufacturing Ltd | high | 85 | Inspector Assigned | null |
 
 ### 3.2 Medium-Severity Complaints
@@ -78,6 +78,8 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ES-20260726-0004 | noise_pollution | Rajesh Kumar | rajesh.k@email.com | "Construction site running heavy machinery at night, exceeds permitted hours" | 555 Builder Ave, West District | 18.9389 | 72.8353 | Metro Construction Co | medium | 75 | Inspection In Progress | null |
 | ES-20260729-0005 | air_pollution | Anonymous Citizen | citizen5@email.com | "Dust clouds from power plant coal storage, visible from residential area" | 321 Power Station Rd, Central District | 18.9647 | 72.8194 | Central Power Plant | medium | 72 | AI Verified | null |
+
+**Demo Script Note (WF-06)**: Complaint `ES-20260729-0005` is intentionally held in the "AI Verified" state. Do not advance it to "Inspector Assigned" during setup. This record is used during the live hackathon demo to show the Compliance Officer UI where queued complaints are manually dispatched.
 
 ### 3.3 Low-Severity Complaints
 
@@ -139,7 +141,7 @@
 
 | Number | Source Complaint | Source Inspection | Violating Facility | Violation Type | State | Penalty Type | Penalty Amount | Case Narrative (AI-generated excerpt) |
 |---|---|---|---|---|---|---|---|---|
-| LGL0001001 | ES-20260725-0001 | INS0001001 | Greenfield Chemical Works | emission_breach | Evidence Compiled | fine | $75,000 | "On July 26, 2026, Field Inspector Kopparapu Nikhil Lokesh conducted a physical inspection of Greenfield Chemical Works in response to citizen complaint ES-20260725-0001. The AI Severity Fusion Agent classified this complaint as HIGH severity (92% confidence) based on dense smoke visible in citizen photo, AQI reading of 210 (Very Unhealthy), and low wind speed (2 km/h) indicating pollutant accumulation. Inspector findings confirmed: (1) Boiler exhaust filter bypass, (2) SO2 emissions 3x permit limit, (3) Failure to perform required scrubber maintenance. Facility has 2 prior violations in last 12 months and current risk score of 95/100 (Critical). Recommend monetary fine and mandatory corrective action plan within 30 days." |
+| LGL0001001 | ES-20260725-0001 | INS0001001 | Greenfield Chemical Works | emission_breach | Evidence Compiled | fine | $75,000 | "On July 26, 2026, Field Inspector Kopparapu Nikhil Lokesh conducted a physical inspection of Greenfield Chemical Works in response to citizen complaint ES-20260725-0001. The AI Severity Fusion Agent classified this complaint as HIGH severity (92% confidence) based on dense smoke visible in citizen photo, AQI reading of 210 (Very Unhealthy), and low wind speed (2 km/h) indicating pollutant accumulation. Inspector findings confirmed: (1) Boiler exhaust filter bypass, (2) SO2 emissions 3x permit limit, (3) Failure to perform required scrubber maintenance. Facility has 3 prior violations in last 12 months and current risk score of 100/100 (Critical). Recommend monetary fine and mandatory corrective action plan within 30 days." |
 | LGL0001002 | ES-20260728-0002 | INS0001002 | Doshi Mining Corp | illegal_dumping | Case Opened | suspension | null | "On July 29, 2026, Field Inspector Mike Rodriguez discovered 12 drums of hazardous waste illegally stored and leaking into a tributary creek at Doshi Mining Corp. AI classified the initial complaint as HIGH severity (88% confidence). Water sample analysis revealed pH 3.2, indicating severe environmental contamination. Facility lacks required waste disposal permit. This is the 2nd confirmed violation in 12 months. Given the severity and repeat nature, recommend temporary operations suspension pending environmental remediation and permit compliance." |
 
 ---

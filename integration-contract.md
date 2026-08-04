@@ -154,6 +154,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 | **Direction** | FastAPI → OpenAI API |
 | **Endpoint / Method** | `POST https://api.openai.com/v1/chat/completions` |
 | **Auth Method** | `Authorization: Bearer $OPENAI_API_KEY` header |
+| **Timeout & Retry** | 30-second timeout per call. Max 2 retries with exponential backoff on 5xx errors or timeouts. If Vision API fails entirely, fallback to text-only analysis. |
 
 ### Request Payload
 
@@ -249,6 +250,8 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 | **Endpoint / Method** | `PATCH /api/now/table/x_eco_complaint/{sys_id}` |
 | **Trigger** | Completion of Severity Fusion reasoning engine |
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
+| **Validation** | FastAPI **MUST** enforce JSON schema validation on the AI output (e.g. using Pydantic). `severity` must be exactly one of: `['low', 'medium', 'high']`. |
+| **Fallback** | If JSON parsing fails or validation fails: (1) Set `ai_severity` = `medium`, (2) Set `ai_confidence` = 0, (3) Set `ai_rationale` = "AI classification failed — defaulting to medium severity for manual review", (4) Set `ai_processing_status` = `error`, (5) Post to `x_eco_agent_log` with `status = 'error'`. |
 
 ### Request Payload
 

@@ -100,12 +100,10 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 ### Photo Capture
 - **Client-Side**: The `<input type="file" accept="image/*" capture="environment">` tag forces mobile devices to open the rear-facing camera directly, minimizing friction.
 - **Attachment Sequence**: 
-  1. The widget uploads the photo FIRST using the ServiceNow Attachment API (`/api/now/attachment/file?table_name=x_eco_complaint&table_sys_id=TEMP_ID` or using a staged upload approach).
-  2. Only after the attachment upload succeeds does the widget create the `x_eco_complaint` record via the widget's server script.
-  3. The FL-01 webhook trigger waits for attachment confirmation (checks that attachments exist before firing the webhook, or includes a brief delay/conditional check).
-  4. This prevents the webhook from firing before the photo is available for FastAPI download.
-
-**Alternative Implementation**: Create the complaint record first to generate a `sys_id`, immediately upload the attachment to that `sys_id`, then have FL-01 include a conditional check or brief delay to ensure attachment exists before webhook dispatch. This is documented explicitly in `integration-contract.md` failure mode table.
+  1. The widget creates the `x_eco_complaint` record via the widget's server script first to generate the `sys_id`.
+  2. The widget immediately uploads the photo to the new `sys_id` using the ServiceNow Attachment API.
+  3. The `FL-01` webhook trigger fires on complaint insert, but includes a mandatory 5-second wait step to allow the attachment upload to complete before dispatching the payload to FastAPI.
+  4. This guarantees the photo is available in ServiceNow when the FastAPI backend queries for it.
 
 ---
 
@@ -116,7 +114,7 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 | Incident Location | `x_eco_complaint` | `incident_address` | String | Reverse-geocoded address or manually entered location description. Also captured: `incident_lat` and `incident_lng` for GPS coordinates via HTML5 Geolocation. |
 | Description | `x_eco_complaint` | `description` | Multi-line text | Full citizen narrative of the environmental incident. The `short_description` field is auto-derived by BR-C01 from category + location for list view display. |
 | Photo | `sys_attachment` | N/A | File | Attached to the complaint `sys_id`. Portal must upload photo first, then create/update complaint record only after attachment success to avoid race condition with FL-01 webhook. |
-| Email Address | `x_eco_complaint` | `citizen_email` | String | Used for tracker authentication |
+| Email Address | `x_eco_complaint` | `citizen_email` | String | Used for tracker authentication. **Requires strict Regex validation** client-side (AngularJS) and server-side to block malicious payloads. |
 | Phone Number | `x_eco_complaint` | `citizen_phone` | String | Optional |
 
 ---
@@ -130,6 +128,7 @@ Opening a public-facing portal requires strict data security to protect PII and 
 3. **Abuse Prevention**: 
    - **CAPTCHA**: Planned for production. For the hackathon build, CAPTCHA is noted as a stated roadmap item. Add one-line note: "Intended approach: Google reCAPTCHA v3 for invisible bot detection, configurable threshold."
    - **Rate Limiting**: An IP-based rate limiter (Before-Insert Business Rule) caps submissions to 5 per hour per IP to protect the external FastAPI/AI budgets.
+4. **Input Validation (SEC-08)**: The `citizen_email` field must undergo strict regex format validation (`^[^\s@]+@[^\s@]+\.[^\s@]+$`) on both the client (AngularJS `$parsers`) and server (`EcoComplaintUtils` lookup step) to prevent injection of malicious payloads into the system.
 
 ---
 

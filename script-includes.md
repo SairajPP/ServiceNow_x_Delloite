@@ -9,6 +9,8 @@
 
 # Section 1: Roster
 
+> **Note**: This file (`script-includes.md`) is the **Single Source of Truth** for all Script Includes. While other files (like `business-rules-client-scripts.md`) may summarize or reference these utilities, the implementations defined here are the canonical versions that must be followed.
+
 | Script Include Name | Client Callable | Purpose | Called From |
 |---|---|---|---|
 | **EcoRiskCalculator** | No | Performs facility environmental risk score math. | `BR-C07`, `BR-I04`, `BR-F03`, `BR-F04`, `FL-05`, `FL-06` |
@@ -248,8 +250,42 @@ EcoConstants.prototype = {
         facility: 'x_eco_facility',
         inspection: 'x_eco_inspection',
         legalCase: 'x_eco_legal_case',
-        agentLog: 'x_eco_agent_log'
+        agentLog: 'x_eco_agent_log',
+        envSnapshot: 'x_eco_env_snapshot',
+        finding: 'x_eco_finding'
     },
+    
+    complaintState: {
+        received: 1,
+        aiVerified: 2,
+        inspectorAssigned: 3,
+        inspectionInProgress: 4,
+        inspectionCompleted: 5,
+        actionTaken: 6,
+        dismissed: 7,
+        closed: 8
+    },
+
+    inspectionState: {
+        scheduled: 1,
+        enRoute: 2,
+        onSite: 3,
+        findingsSubmitted: 4,
+        reportDrafted: 5,
+        completedViolation: 6,
+        completedDismissed: 7,
+        cancelled: 8
+    },
+
+    validSeverity: function(value) {
+        return ['low', 'medium', 'high'].indexOf(String(value)) >= 0;
+    },
+
+    priorityForSeverity: function(value) {
+        var map = { high: 1, medium: 2, low: 3 };
+        return map[String(value)] || 3;
+    },
+
     type: 'EcoConstants'
 };
 ```
@@ -325,9 +361,9 @@ EcoComplaintNumberGenerator.prototype = {
         
         var nextSeq = 1;
         if (gr.next()) {
-            var currentNumber = gr.getValue('number'); // e.g. ES-20260731-0042
+            var currentNumber = gr.getValue('number'); // e.g. ES-20260731-0042-X7Q
             var parts = currentNumber.split('-');
-            if (parts.length === 3) {
+            if (parts.length >= 3) {
                 var lastPart = parseInt(parts[2], 10);
                 if (!isNaN(lastPart)) {
                     nextSeq = lastPart + 1;
@@ -340,8 +376,15 @@ EcoComplaintNumberGenerator.prototype = {
         while (seqString.length < 4) {
             seqString = '0' + seqString;
         }
+
+        // Generate 3 random alphanumeric characters for entropy
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var entropy = "";
+        for (var i = 0; i < 3; i++) {
+            entropy += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
         
-        return prefix + seqString; // Returns format: ES-YYYYMMDD-####
+        return prefix + seqString + '-' + entropy; // Returns format: ES-YYYYMMDD-####-XXX
     },
 
     type: 'EcoComplaintNumberGenerator'
