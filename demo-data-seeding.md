@@ -1,7 +1,7 @@
 # EcoSentinel AI — Demo Data Seeding Plan
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Purpose**: Provides a realistic, believable dataset spanning the full severity spectrum for hackathon demonstration and judge evaluation  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -13,21 +13,21 @@
 
 | Name | Username | Email | Groups | Roles | Purpose |
 |---|---|---|---|---|---|
-| Kuchipudi Lakshmi Venkatesh | `venkatesh.k` | `venkatesh.k@vertexnow.com` | EcoSentinel — System Administrators | `x_eco.admin`, `admin` | System admin demo persona |
-| Kasireddy Lokesh Reddy | `lokesh.k` | `lokesh.k@vertexnow.com` | EcoSentinel — Compliance Officers | `x_eco.officer` | Compliance officer demo persona |
-| Kopparapu Nikhil Lokesh | `nikhil.k` | `nikhil.k@vertexnow.com` | EcoSentinel — North Zone Inspectors | `x_eco.inspector` | North zone inspector demo persona |
-| Sairaj Pawar | `sairaj.p` | `sairaj.p@vertexnow.com` | EcoSentinel — South Zone Inspectors | `x_eco.inspector` | South zone inspector demo persona |
-| Yuvra Zende | `yuvra.z` | `yuvra.z@vertexnow.com` | EcoSentinel — Legal Prosecution Team | `x_eco.legal_handler` | Legal handler demo persona |
+| Kuchipudi Lakshmi Venkatesh | `venkatesh.k` | `venkatesh.k@vertexnow.com` | EcoSentinel — System Administrators | `x_snc_ecosentine_0.admin`, `admin` | System admin demo persona |
+| Kasireddy Lokesh Reddy | `lokesh.k` | `lokesh.k@vertexnow.com` | EcoSentinel — Compliance Officers | `x_snc_ecosentine_0.officer` | Compliance officer demo persona |
+| Kopparapu Nikhil Lokesh | `nikhil.k` | `nikhil.k@vertexnow.com` | EcoSentinel — North Zone Inspectors | `x_snc_ecosentine_0.inspector` | North zone inspector demo persona |
+| Sairaj Pawar | `sairaj.p` | `sairaj.p@vertexnow.com` | EcoSentinel — South Zone Inspectors | `x_snc_ecosentine_0.inspector` | South zone inspector demo persona |
+| Yuvra Zende | `yuvra.z` | `yuvra.z@vertexnow.com` | EcoSentinel — Legal Prosecution Team | `x_snc_ecosentine_0.legal_handler` | Legal handler demo persona |
 
 ### 1.2 Fictional Personas
 
 | Name | Username | Email | Groups | Roles | Purpose |
 |---|---|---|---|---|---|
-| Sarah Jenkins | `sjenkins.director` | `sjenkins@agency.gov` | EcoSentinel — Executive Leadership | `x_eco.executive` | Executive leadership dashboard viewer |
-| Mike Rodriguez | `mrodriguez.inspector` | `mrodriguez@agency.gov` | EcoSentinel — Central Zone Inspectors | `x_eco.inspector` | Central zone inspector |
-| Priya Sharma | `psharma.officer` | `psharma@agency.gov` | EcoSentinel — Compliance Officers | `x_eco.officer` | Additional compliance officer |
-| John Lee | `jlee.legal` | `jlee@agency.gov` | EcoSentinel — Legal Prosecution Team | `x_eco.legal_handler` | Additional legal handler |
-| FastAPI Service Account | `ecosentinel.api` | `api@ecosentinel.system` | None | `x_eco.integration_user` | Non-interactive API account |
+| Sarah Jenkins | `sjenkins.director` | `sjenkins@agency.gov` | EcoSentinel — Executive Leadership | `x_snc_ecosentine_0.executive` | Executive leadership dashboard viewer |
+| Mike Rodriguez | `mrodriguez.inspector` | `mrodriguez@agency.gov` | EcoSentinel — Central Zone Inspectors | `x_snc_ecosentine_0.inspector` | Central zone inspector |
+| Priya Sharma | `psharma.officer` | `psharma@agency.gov` | EcoSentinel — Compliance Officers | `x_snc_ecosentine_0.officer` | Additional compliance officer |
+| John Lee | `jlee.legal` | `jlee@agency.gov` | EcoSentinel — Legal Prosecution Team | `x_snc_ecosentine_0.legal_handler` | Additional legal handler |
+| FastAPI Service Account | `ecosentinel.api` | `api@ecosentinel.system` | None | `x_snc_ecosentine_0.integration_user` | Non-interactive API account |
 
 ---
 
@@ -162,10 +162,10 @@
 
 | Log ID | Agent Name | Agent Type | Linked Table | Linked Record Number | Input Summary | Output Summary | Confidence | Status | Decision Timestamp |
 |---|---|---|---|---|---|---|---|---|---|
-| ADL0001001 | severity_fusion | external | x_eco_complaint | ES-20260725-0001 | "Image: 'dense black smoke from chimney'. Citizen: 'chemical smell, children nearby'. AQI: 210. Wind: 2 km/h." | "Severity: HIGH. Confidence: 92%. Rationale: Dense smoke + Very Unhealthy AQI + low wind = pollutant accumulation near residential." | 92 | success | 2026-07-25 14:25 |
-| ADL0001002 | severity_fusion | external | x_eco_complaint | ES-20260728-0002 | "Image: 'leaking drums near creek'. Citizen: 'chemical liquid'. AQI: 165. Wind: 8.5 km/h." | "Severity: HIGH. Confidence: 88%. Rationale: Visual confirmation of hazmat + water contamination risk + unhealthy AQI." | 88 | success | 2026-07-28 11:17 |
-| ADL0001003 | inspection_report | native | x_eco_inspection | INS0001001 | "Raw notes: 'Boiler exhaust filter bypassed…' Findings: 4 items (2 photos, 1 measurement, 1 document)." | "Structured report generated with Executive Summary, Site Description, Findings list, Evidence Summary, Conclusion, Recommendations." | 85 | success | 2026-07-26 12:00 |
-| ADL0001004 | legal_case_summary | native | x_eco_legal_case | LGL0001001 | "Complaint ES-20260725-0001, Inspection INS0001001, Facility risk: 95/100, 2 prior violations." | "Legal narrative compiled: Case Overview, AI Classification, Environmental Conditions, Inspection Findings, Compliance History, Violation Determination, Recommended Action." | 90 | success | 2026-07-27 09:00 |
+| ADL0001001 | severity_fusion | external | x_snc_ecosentine_0_complaint | ES-20260725-0001 | "Image: 'dense black smoke from chimney'. Citizen: 'chemical smell, children nearby'. AQI: 210. Wind: 2 km/h." | "Severity: HIGH. Confidence: 92%. Rationale: Dense smoke + Very Unhealthy AQI + low wind = pollutant accumulation near residential." | 92 | success | 2026-07-25 14:25 |
+| ADL0001002 | severity_fusion | external | x_snc_ecosentine_0_complaint | ES-20260728-0002 | "Image: 'leaking drums near creek'. Citizen: 'chemical liquid'. AQI: 165. Wind: 8.5 km/h." | "Severity: HIGH. Confidence: 88%. Rationale: Visual confirmation of hazmat + water contamination risk + unhealthy AQI." | 88 | success | 2026-07-28 11:17 |
+| ADL0001003 | inspection_report | native | x_snc_ecosentine_0_inspection | INS0001001 | "Raw notes: 'Boiler exhaust filter bypassed…' Findings: 4 items (2 photos, 1 measurement, 1 document)." | "Structured report generated with Executive Summary, Site Description, Findings list, Evidence Summary, Conclusion, Recommendations." | 85 | success | 2026-07-26 12:00 |
+| ADL0001004 | legal_case_summary | native | x_snc_ecosentine_0_legal_case | LGL0001001 | "Complaint ES-20260725-0001, Inspection INS0001001, Facility risk: 95/100, 2 prior violations." | "Legal narrative compiled: Case Overview, AI Classification, Environmental Conditions, Inspection Findings, Compliance History, Violation Determination, Recommended Action." | 90 | success | 2026-07-27 09:00 |
 
 ---
 
@@ -190,7 +190,7 @@
 Create a Fix Script or Background Script to generate demo data programmatically:
 ```javascript
 // Example: Create demo facility
-var facility = new GlideRecord('x_eco_facility');
+var facility = new GlideRecord('x_snc_ecosentine_0_facility');
 facility.initialize();
 facility.setValue('name', 'Greenfield Chemical Works');
 facility.setValue('facility_id', 'FC-2021-0042');

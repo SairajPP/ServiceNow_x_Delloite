@@ -17,64 +17,64 @@ This is a deliberate architecture choice to ensure 100% functional completeness 
 
 ## 2. Officer Experience Walkthrough
 
-Compliance Officers (`x_eco.officer`) manage the triage, dispatch, and escalation of environmental incidents. Their daily workflow is executed through specific native views.
+Compliance Officers (`x_snc_ecosentine_0.officer`) manage the triage, dispatch, and escalation of environmental incidents. Their daily workflow is executed through specific native views.
 
 ### 2.1 Complaint List View
-- **View Name**: `EcoSentinel Officer View` (Table: `x_eco_complaint`)
+- **View Name**: `EcoSentinel Officer View` (Table: `x_snc_ecosentine_0_complaint`)
 - **Default Filter**: `Active is true` OR `State is not Closed/Dismissed`, sorted by `priority` (Urgency Score) ascending, then `sys_created_on` descending.
 - **Columns Shown**: Number, Priority, AI Severity, State, Linked Facility, Location, Created.
 - **Experience**: The officer starts their day here, pulling the highest priority items (automatically scored by `EcoUrgencyScoreCalculator`) from the top of the queue.
 
 ### 2.2 Complaint Form View
-- **View Name**: `EcoSentinel Officer View` (Table: `x_eco_complaint`)
+- **View Name**: `EcoSentinel Officer View` (Table: `x_snc_ecosentine_0_complaint`)
 - **Key Sections**:
   - **Incident Details**: Citizen description, location, attachments (photos).
   - **AI Fusion Output (Read-Only)**: Displays `ai_severity`, `ai_confidence`, `ai_rationale`, and `ai_image_caption` (populated by the AI Agents).
-  - **AI Override Control**: The `ai_severity` field has a UI Policy/ACL allowing *only* users with the `x_eco.officer` or `x_eco.admin` role to manually override the AI's classification if they disagree with the AI's assessment.
+  - **AI Override Control**: The `ai_severity` field has a UI Policy/ACL allowing *only* users with the `x_snc_ecosentine_0.officer` or `x_snc_ecosentine_0.admin` role to manually override the AI's classification if they disagree with the AI's assessment.
 - **Related Lists Included**:
-  - Inspections (`x_eco_inspection`)
-  - Legal Cases (`x_eco_legal_case`)
-  - Agent Decision Logs (`x_eco_agent_log`)
+  - Inspections (`x_snc_ecosentine_0_inspection`)
+  - Legal Cases (`x_snc_ecosentine_0_legal_case`)
+  - Agent Decision Logs (`x_snc_ecosentine_0_agent_decisi`)
 
 ### 2.3 Facility List & Form View
-- **View Name**: `Default view` (Table: `x_eco_facility`)
+- **View Name**: `Default view` (Table: `x_snc_ecosentine_0_facility`)
 - **Form Display**: Prominently shows the Facility Name, IRM Entity linkage (per `irm-legal-config.md`), and the dynamically calculated `risk_score`.
 - **Related Lists**: Complaint History, Inspection History.
 - **Experience**: Officers use this view to assess the historical non-compliance of a facility when deciding whether to escalate an inspection to a legal case.
 
 ### 2.4 Agent Decision Log Review
-- **View Name**: `Default view` (Table: `x_eco_agent_log` as a related list on Complaint)
+- **View Name**: `Default view` (Table: `x_snc_ecosentine_0_agent_decisi` as a related list on Complaint)
 - **Experience**: Officers review this append-only log to audit exactly what the AI Control Tower logged during the Severity Fusion Agent's execution. This guarantees 100% explainability for regulatory audits.
 
 ### 2.5 High-Risk Facility Alert Handling
-- **Experience**: When a facility crosses the high-risk threshold, `SF-02` sends an email/notification to the Compliance Officers group. The notification contains a deep-link URI directly to the `x_eco_facility` form view, allowing the officer to immediately review the facility's risk breakdown and trigger manual re-inspections if necessary.
+- **Experience**: When a facility crosses the high-risk threshold, `SF-02` sends an email/notification to the Compliance Officers group. The notification contains a deep-link URI directly to the `x_snc_ecosentine_0_facility` form view, allowing the officer to immediately review the facility's risk breakdown and trigger manual re-inspections if necessary.
 
 ---
 
 ## 3. Legal Case Handler Experience
 
-Legal Case Handlers (`x_eco.legal_handler`, optionally mapped to `sn_grc.business_user` / `sn_grc.manager` for IRM/LSD plugin compatibility) operate within the ServiceNow Legal Service Delivery / IRM ecosystem.
+Legal Case Handlers (`x_snc_ecosentine_0.legal_handler`, optionally mapped to `sn_grc.business_user` / `sn_grc.manager` for IRM/LSD plugin compatibility) operate within the ServiceNow Legal Service Delivery / IRM ecosystem.
 
 ### 3.1 Legal Case List View
-- **View Name**: `EcoSentinel Legal View` (Table: `x_eco_legal_case`)
+- **View Name**: `EcoSentinel Legal View` (Table: `x_snc_ecosentine_0_legal_case`)
 - **Default Filter**: `Active is true`, sorted by `sys_created_on` descending.
 - **Columns Shown**: Number, State, Violating Facility, Violation Type, Source Inspection.
 
 ### 3.2 Legal Case Form View
-- **View Name**: `EcoSentinel Legal View` (Table: `x_eco_legal_case`)
+- **View Name**: `EcoSentinel Legal View` (Table: `x_snc_ecosentine_0_legal_case`)
 - **Form Display**:
-  - **Read-Only Context**: Details synced from the `x_eco_inspection` and `x_eco_complaint` (Facility, Violation Type, Initial AI Severity).
+  - **Read-Only Context**: Details synced from the `x_snc_ecosentine_0_inspection` and `x_snc_ecosentine_0_complaint` (Facility, Violation Type, Initial AI Severity).
   - **Editable Fields**: Case State, Legal Notes, Resolution SLA tracking.
 - **Related Lists Included**:
-  - Source Complaint (`x_eco_complaint` - single record list)
-  - Source Inspection (`x_eco_inspection` - single record list)
+  - Source Complaint (`x_snc_ecosentine_0_complaint` - single record list)
+  - Source Inspection (`x_snc_ecosentine_0_inspection` - single record list)
 - **Experience**: Legal handlers work the case through to resolution (fines, remediation). Closing the legal case triggers `FL-11: Legal Case Resolution Sync`, which closes the parent complaint and updates the IRM Risk/Compliance posture for the facility as configured in `irm-legal-config.md`.
 
 ---
 
 ## 4. System Administrator Experience
 
-System Administrators (`x_eco.admin` and `admin`) configure the underlying AI engines and platform routing. All administrative tasks are performed in standard ServiceNow admin navigation modules. No custom UI is required.
+System Administrators (`x_snc_ecosentine_0.admin` and `admin`) configure the underlying AI engines and platform routing. All administrative tasks are performed in standard ServiceNow admin navigation modules. No custom UI is required.
 
 - **AI Agent Fabric Config**: Accessed via `Now Assist > AI Agent Fabric` to configure the connection to external endpoints (OpenAI).
 - **AI Agent Orchestrator**: Accessed via `Now Assist > AI Agent Studio` to sequence the Native Now Assist skills and external agents.
@@ -89,13 +89,13 @@ System Administrators (`x_eco.admin` and `admin`) configure the underlying AI en
 
 | Base Table | View Name | Type | Columns/Fields Shown | Default Filter | Default Sort |
 |---|---|---|---|---|---|
-| `x_eco_complaint` | EcoSentinel Officer View | List | Number, Priority, AI Severity, State, Linked Facility, Location, Created | `Active = true` | `priority` (asc), `sys_created_on` (desc) |
-| `x_eco_complaint` | EcoSentinel Officer View | Related List | (Inspections) Number, State, Assigned to, Violation Type | None | `sys_created_on` (desc) |
-| `x_eco_complaint` | EcoSentinel Officer View | Related List | (Legal Cases) Number, State, Violation Type | None | `sys_created_on` (desc) |
-| `x_eco_complaint` | EcoSentinel Officer View | Related List | (Agent Logs) Step, Action Taken, Confidence, Created | None | `sys_created_on` (desc) |
-| `x_eco_facility` | Default view | List | Name, Risk Score, Complaints (90d), Last Inspection, IRM Entity | `Active = true` | `risk_score` (desc) |
-| `x_eco_facility` | Default view | Related List | (Complaints) Number, State, AI Severity, Created | None | `sys_created_on` (desc) |
-| `x_eco_legal_case`| EcoSentinel Legal View | List | Number, State, Violating Facility, Violation Type, Source Inspection | `Active = true` | `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_complaint` | EcoSentinel Officer View | List | Number, Priority, AI Severity, State, Linked Facility, Location, Created | `Active = true` | `priority` (asc), `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_complaint` | EcoSentinel Officer View | Related List | (Inspections) Number, State, Assigned to, Violation Type | None | `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_complaint` | EcoSentinel Officer View | Related List | (Legal Cases) Number, State, Violation Type | None | `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_complaint` | EcoSentinel Officer View | Related List | (Agent Logs) Step, Action Taken, Confidence, Created | None | `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_facility` | Default view | List | Name, Risk Score, Complaints (90d), Last Inspection, IRM Entity | `Active = true` | `risk_score` (desc) |
+| `x_snc_ecosentine_0_facility` | Default view | Related List | (Complaints) Number, State, AI Severity, Created | None | `sys_created_on` (desc) |
+| `x_snc_ecosentine_0_legal_case`| EcoSentinel Legal View | List | Number, State, Violating Facility, Violation Type, Source Inspection | `Active = true` | `sys_created_on` (desc) |
 
 ---
 

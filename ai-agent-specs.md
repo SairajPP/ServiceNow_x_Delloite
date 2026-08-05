@@ -1,7 +1,7 @@
 # EcoSentinel AI — AI Agent Specifications
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [business-rules-client-scripts.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/business-rules-client-scripts.md) · [roles-groups-users.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/roles-groups-users.md) · [flow-designer-flows.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/flow-designer-flows.md) · [integration-contract.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/integration-contract.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -37,8 +37,8 @@
 
 | Input | Source Table | Source Field | Description |
 |---|---|---|---|
-| Citizen description | `x_eco_complaint` | `description` | The free-text narrative submitted by the citizen. |
-| Incident category | `x_eco_complaint` | `incident_category` | The dropdown category selected by the citizen (Air, Water, etc.). |
+| Citizen description | `x_snc_ecosentine_0_complaint` | `description` | The free-text narrative submitted by the citizen. |
+| Incident category | `x_snc_ecosentine_0_complaint` | `incident_category` | The dropdown category selected by the citizen (Air, Water, etc.). |
 
 ### System Prompt
 
@@ -96,7 +96,7 @@ OUTPUT FORMAT (strict JSON):
 | Field | Target Table | Target Field |
 |---|---|---|
 | Full JSON output | Passed to Severity Fusion Agent via Orchestrator (not persisted independently) | — |
-| `summary` | `x_eco_complaint` | `work_notes` (as a work note entry) |
+| `summary` | `x_snc_ecosentine_0_complaint` | `work_notes` (as a work note entry) |
 
 ### Guardrails
 
@@ -123,7 +123,7 @@ OUTPUT FORMAT (strict JSON):
 
 | Input | Source | Description |
 |---|---|---|
-| Photo binary | `x_eco_complaint` attachment (downloaded via Attachment API) | The citizen's uploaded incident photo, base64-encoded. |
+| Photo binary | `x_snc_ecosentine_0_complaint` attachment (downloaded via Attachment API) | The citizen's uploaded incident photo, base64-encoded. |
 
 ### System Prompt (sent to OpenAI API)
 
@@ -161,7 +161,7 @@ Dense black smoke plume discharging from an active industrial boiler chimney sta
 
 | Field | Target Table | Target Field |
 |---|---|---|
-| Image caption | `x_eco_complaint` | `ai_image_caption` |
+| Image caption | `x_snc_ecosentine_0_complaint` | `ai_image_caption` |
 | Caption text | Passed to Severity Fusion Agent via Orchestrator | — |
 
 ### Guardrails
@@ -194,7 +194,7 @@ Dense black smoke plume discharging from an active industrial boiler chimney sta
 |---|---|---|
 | Triage output JSON | Triage Agent (step 1) | `pollution_keywords`, `urgency_signals`, `initial_urgency`, `summary`. |
 | Image caption | Vision Agent (step 2) | Single-sentence description of the photo. |
-| Citizen description | `x_eco_complaint.description` | Original free-text from the citizen. |
+| Citizen description | `x_snc_ecosentine_0_complaint.description` | Original free-text from the citizen. |
 | AQI value | Weather/AQI API response | Integer (0–500). |
 | AQI category | Derived from AQI value | e.g., "Very Unhealthy". |
 | Wind speed (km/h) | Weather API response | Decimal. |
@@ -324,10 +324,10 @@ PROMPT INJECTION DEFENSE:
 
 | Output Field | Target Table | Target Field |
 |---|---|---|
-| `severity` | `x_eco_complaint` | `ai_severity` |
-| `confidence` | `x_eco_complaint` | `ai_confidence` |
-| `rationale` | `x_eco_complaint` | `ai_rationale` |
-| All inputs/outputs | `x_eco_agent_log` | (via SF-03 / `EcoAgentLogger`) |
+| `severity` | `x_snc_ecosentine_0_complaint` | `ai_severity` |
+| `confidence` | `x_snc_ecosentine_0_complaint` | `ai_confidence` |
+| `rationale` | `x_snc_ecosentine_0_complaint` | `ai_rationale` |
+| All inputs/outputs | `x_snc_ecosentine_0_agent_decisi` | (via SF-03 / `EcoAgentLogger`) |
 
 ### Guardrails
 
@@ -341,7 +341,7 @@ PROMPT INJECTION DEFENSE:
 
 - If the agent returns malformed JSON: Parse fails → the Orchestrator applies the default fallback: `severity = "medium"`, `confidence = 0`, `rationale = "FALLBACK: Severity Fusion Agent returned invalid output. Default MEDIUM applied for manual review."`.
 - If the agent times out (> 30 seconds): Same fallback as above.
-- Both scenarios are logged to `x_eco_agent_log` with `status = "error"` or `status = "timeout"`.
+- Both scenarios are logged to `x_snc_ecosentine_0_agent_decisi` with `status = "error"` or `status = "timeout"`.
 
 ---
 
@@ -357,10 +357,10 @@ PROMPT INJECTION DEFENSE:
 
 | Input | Source Table | Source Field | Description |
 |---|---|---|---|
-| Inspector raw notes | `x_eco_inspection` | `raw_notes` | Free-form text typed on Now Mobile. |
-| Findings list | `x_eco_finding` | All fields | All findings linked to this inspection (type, description, measurement, severity). |
-| Complaint category | `x_eco_complaint` | `incident_category` | The original incident category. |
-| Complaint address | `x_eco_complaint` | `incident_address` | The location being inspected. |
+| Inspector raw notes | `x_snc_ecosentine_0_inspection` | `raw_notes` | Free-form text typed on Now Mobile. |
+| Findings list | `x_snc_ecosentine_0_finding` | All fields | All findings linked to this inspection (type, description, measurement, severity). |
+| Complaint category | `x_snc_ecosentine_0_complaint` | `incident_category` | The original incident category. |
+| Complaint address | `x_snc_ecosentine_0_complaint` | `incident_address` | The location being inspected. |
 
 ### System Prompt
 
@@ -392,7 +392,7 @@ CONSTRAINTS:
 
 ### Output Format
 
-Plain text with section headers. Written to `x_eco_inspection.ai_report`.
+Plain text with section headers. Written to `x_snc_ecosentine_0_inspection.ai_report`.
 
 ### Guardrails
 
@@ -412,19 +412,19 @@ Plain text with section headers. Written to `x_eco_inspection.ai_report`.
 |---|---|
 | **Name** | EcoSentinel Legal Case Summary Agent |
 | **Type** | Native — AI Agent Studio |
-| **Trigger** | New `x_eco_legal_case` record created. Triggered by `FL-07`. |
+| **Trigger** | New `x_snc_ecosentine_0_legal_case` record created. Triggered by `FL-07`. |
 
 ### Inputs
 
 | Input | Source Table | Source Field | Description |
 |---|---|---|---|
-| Complaint details | `x_eco_complaint` | `number`, `description`, `incident_category`, `ai_severity`, `ai_confidence`, `ai_rationale` | Original complaint data. |
-| AI image caption | `x_eco_complaint` | `ai_image_caption` | What the AI saw in the photo. |
-| Environmental snapshot | `x_eco_env_snapshot` | `aqi_value`, `aqi_category`, `wind_speed`, `weather_condition` | Conditions at time of report. |
-| Inspection report | `x_eco_inspection` | `ai_report` or `raw_notes` | Inspector's structured report. |
-| Inspection findings | `x_eco_finding` | All fields per finding | Individual evidence items. |
-| Violation type | `x_eco_inspection` | `violation_type` | The confirmed violation category. |
-| Facility history | `x_eco_facility` | `name`, `sector`, `risk_score`, `risk_tier`, `violations_12m`, `complaints_90d` | History and risk profile. |
+| Complaint details | `x_snc_ecosentine_0_complaint` | `number`, `description`, `incident_category`, `ai_severity`, `ai_confidence`, `ai_rationale` | Original complaint data. |
+| AI image caption | `x_snc_ecosentine_0_complaint` | `ai_image_caption` | What the AI saw in the photo. |
+| Environmental snapshot | `x_snc_ecosentine_0_env_snapshot` | `aqi_value`, `aqi_category`, `wind_speed`, `weather_condition` | Conditions at time of report. |
+| Inspection report | `x_snc_ecosentine_0_inspection` | `ai_report` or `raw_notes` | Inspector's structured report. |
+| Inspection findings | `x_snc_ecosentine_0_finding` | All fields per finding | Individual evidence items. |
+| Violation type | `x_snc_ecosentine_0_inspection` | `violation_type` | The confirmed violation category. |
+| Facility history | `x_snc_ecosentine_0_facility` | `name`, `sector`, `risk_score`, `risk_tier`, `violations_12m`, `complaints_90d` | History and risk profile. |
 
 ### System Prompt
 
@@ -460,7 +460,7 @@ CONSTRAINTS:
 
 ### Output Format
 
-Plain text narrative (2–4 paragraphs per section). Written to `x_eco_legal_case.case_narrative`.
+Plain text narrative (2–4 paragraphs per section). Written to `x_snc_ecosentine_0_legal_case.case_narrative`.
 
 ### Guardrails
 
@@ -472,7 +472,7 @@ Plain text narrative (2–4 paragraphs per section). Written to `x_eco_legal_cas
 ### Failure / Fallback
 
 - If the agent errors, `FL-07` inserts the raw compiled evidence package (see `FL-07` step 6 in `flow-designer-flows.md`) as the `case_narrative`. A work note is added.
-- Logged to `x_eco_agent_log` with `status = "error"`.
+- Logged to `x_snc_ecosentine_0_agent_decisi` with `status = "error"`.
 
 ---
 
@@ -552,7 +552,7 @@ This task defines the full AI classification pipeline for a single incoming comp
 | **Task Name** | `TASK-ECO-CLASSIFY` |
 | **Description** | Classify an incoming environmental complaint using multi-agent reasoning. |
 | **Trigger** | Called by the FastAPI backend after `FL-01` dispatches the webhook. |
-| **Input** | `complaint_sys_id` — the sys_id of the new `x_eco_complaint` record. |
+| **Input** | `complaint_sys_id` — the sys_id of the new `x_snc_ecosentine_0_complaint` record. |
 
 ### Step Sequence
 
@@ -579,9 +579,9 @@ Step 2 (Vision) ─────────────┘       │
                                      ▼
                               Output: severity_json
                                      │
-                              Written to x_eco_complaint
-                              + x_eco_env_snapshot
-                              + x_eco_agent_log
+                              Written to x_snc_ecosentine_0_complaint
+                              + x_snc_ecosentine_0_env_snapshot
+                              + x_snc_ecosentine_0_agent_decisi
 ```
 
 ### Pre-Conditions (checked before task starts)
@@ -660,7 +660,7 @@ AI Agent Fabric allows external AI models to be registered alongside native Now 
 |---|---|
 | **Visibility** | The OpenAI Vision Agent appears in the AI Agent Fabric console alongside native agents. Admins can see its registration, connection status, and invocation history. |
 | **Monitoring** | Every call to the agent is logged with input/output snapshots, latency, and success/failure status — visible in AI Control Tower. |
-| **Permission Scope** | The agent is scoped to the `x_eco_` application. It can only be invoked by the Orchestrator task `TASK-ECO-CLASSIFY` or by processes running under the `x_eco.admin` or `x_eco.integration_user` roles. |
+| **Permission Scope** | The agent is scoped to the `x_snc_ecosentine_0_` application. It can only be invoked by the Orchestrator task `TASK-ECO-CLASSIFY` or by processes running under the `x_snc_ecosentine_0.admin` or `x_snc_ecosentine_0.integration_user` roles. |
 | **Data Governance** | The Fabric registration declares that this agent receives image data (PII category: none — no citizen faces or personal data in environmental photos) and returns text (no PII). |
 | **Version Pinning** | The model is pinned to `gpt-4o` (not `gpt-4o-latest`) to ensure deterministic behaviour during the hackathon demo. |
 
@@ -670,7 +670,7 @@ AI Agent Fabric allows external AI models to be registered alongside native Now 
 
 ## What Gets Logged
 
-Every agent decision — native or external — generates a record in the **Agent Decision Log** table (`x_eco_agent_log`) as defined in [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md). This is the **primary audit store** for EcoSentinel.
+Every agent decision — native or external — generates a record in the **Agent Decision Log** table (`x_snc_ecosentine_0_agent_decisi`) as defined in [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md). This is the **primary audit store** for EcoSentinel.
 
 ### Logged Fields Per Agent Decision
 
@@ -678,7 +678,7 @@ Every agent decision — native or external — generates a record in the **Agen
 |---|---|---|
 | `agent_name` | Which agent made the decision. | `severity_fusion` |
 | `agent_type` | Native or External. | `external` |
-| `linked_table` | Table the decision relates to. | `x_eco_complaint` |
+| `linked_table` | Table the decision relates to. | `x_snc_ecosentine_0_complaint` |
 | `linked_record` | sys_id of the specific record. | `8a9b2c3d...` |
 | `linked_record_number` | Human-readable record number. | `ES-20260731-0042` |
 | `input_summary` | Snapshot of what the agent received. | `"Image: dense smoke. AQI: 210. Wind: 2 km/h."` |
@@ -691,7 +691,7 @@ Every agent decision — native or external — generates a record in the **Agen
 
 ### Relationship to Native AI Control Tower
 
-ServiceNow's native AI Control Tower (if available on the PDI) provides a platform-level dashboard showing all AI agent activity across the instance. EcoSentinel's `x_eco_agent_log` table serves as an **application-level audit log** that:
+ServiceNow's native AI Control Tower (if available on the PDI) provides a platform-level dashboard showing all AI agent activity across the instance. EcoSentinel's `x_snc_ecosentine_0_agent_decisi` table serves as an **application-level audit log** that:
 
 1. **Supplements** the native Control Tower with EcoSentinel-specific fields (linked complaint/inspection/legal case, structured input/output summaries, the specific confidence formula used).
 2. **Survives** independently if the AI Control Tower plugin is not activated on the PDI (it's a standalone custom table, not dependent on any plugin).
@@ -703,11 +703,11 @@ When a Compliance Officer overrides the AI's severity classification:
 
 | What Changes | Where It's Captured |
 |---|---|
-| Officer sets `override_severity` on the complaint | `x_eco_complaint.override_severity` field |
-| Officer provides mandatory reason | `x_eco_complaint.override_reason` field |
-| Override timestamp | `x_eco_complaint.sys_updated_on` (inherited) |
-| Override by whom | `x_eco_complaint.sys_updated_by` (inherited) |
-| Original AI decision preserved | `x_eco_complaint.ai_severity` and `x_eco_complaint.ai_rationale` remain untouched — the override does NOT modify the AI's original output |
+| Officer sets `override_severity` on the complaint | `x_snc_ecosentine_0_complaint.override_severity` field |
+| Officer provides mandatory reason | `x_snc_ecosentine_0_complaint.override_reason` field |
+| Override timestamp | `x_snc_ecosentine_0_complaint.sys_updated_on` (inherited) |
+| Override by whom | `x_snc_ecosentine_0_complaint.sys_updated_by` (inherited) |
+| Original AI decision preserved | `x_snc_ecosentine_0_complaint.ai_severity` and `x_snc_ecosentine_0_complaint.ai_rationale` remain untouched — the override does NOT modify the AI's original output |
 
 This means any auditor can see: the AI said X with Y% confidence because of Z, and Officer [name] overrode it to W because of [reason] at [time]. Both the AI decision and the human override coexist on the same record.
 
@@ -717,11 +717,11 @@ This means any auditor can see: the AI said X with Y% confidence because of Z, a
 
 | Override Point | Agent Output Being Overridden | Required Role | Override Field(s) | Audit Mechanism |
 |---|---|---|---|---|
-| **Severity Classification** | Severity Fusion Agent's `ai_severity` | `x_eco.officer` or `x_eco.admin` | `override_severity` + `override_reason` on `x_eco_complaint` | Original `ai_severity` preserved. Override captured with reason and `sys_updated_by`. CS-C03 enforces mandatory reason. |
-| **Inspection Report** | Inspection Report Agent's `ai_report` | `x_eco.inspector` or `x_eco.officer` | `ai_report` on `x_eco_inspection` (editable by inspector/officer) | Original AI-generated report is logged in `x_eco_agent_log.output_summary`. Any edits to `ai_report` are tracked via `sys_updated_on`. |
-| **Legal Case Narrative** | Legal Case Summary Agent's `case_narrative` | `x_eco.legal_handler` or `x_eco.admin` | `case_narrative` on `x_eco_legal_case` | Original AI-generated narrative is logged in `x_eco_agent_log.output_summary`. Edits tracked via activity stream. |
-| **Complaint Category** | Triage Agent's inferred category | `x_eco.officer` or `x_eco.admin` | `incident_category` on `x_eco_complaint` | Change logged in work notes and `sys_updated_by`. |
-| **Facility Risk Score** | System-calculated `risk_score` | System process only - no normal manual override permitted | `risk_score` on `x_eco_facility` (read-only ACL plus controlled server-side recalculation) | Risk score is purely formula-driven. Officers can challenge it by filing a review request, but cannot directly edit the score. |
+| **Severity Classification** | Severity Fusion Agent's `ai_severity` | `x_snc_ecosentine_0.officer` or `x_snc_ecosentine_0.admin` | `override_severity` + `override_reason` on `x_snc_ecosentine_0_complaint` | Original `ai_severity` preserved. Override captured with reason and `sys_updated_by`. CS-C03 enforces mandatory reason. |
+| **Inspection Report** | Inspection Report Agent's `ai_report` | `x_snc_ecosentine_0.inspector` or `x_snc_ecosentine_0.officer` | `ai_report` on `x_snc_ecosentine_0_inspection` (editable by inspector/officer) | Original AI-generated report is logged in `x_snc_ecosentine_0_agent_decisi.output_summary`. Any edits to `ai_report` are tracked via `sys_updated_on`. |
+| **Legal Case Narrative** | Legal Case Summary Agent's `case_narrative` | `x_snc_ecosentine_0.legal_handler` or `x_snc_ecosentine_0.admin` | `case_narrative` on `x_snc_ecosentine_0_legal_case` | Original AI-generated narrative is logged in `x_snc_ecosentine_0_agent_decisi.output_summary`. Edits tracked via activity stream. |
+| **Complaint Category** | Triage Agent's inferred category | `x_snc_ecosentine_0.officer` or `x_snc_ecosentine_0.admin` | `incident_category` on `x_snc_ecosentine_0_complaint` | Change logged in work notes and `sys_updated_by`. |
+| **Facility Risk Score** | System-calculated `risk_score` | System process only - no normal manual override permitted | `risk_score` on `x_snc_ecosentine_0_facility` (read-only ACL plus controlled server-side recalculation) | Risk score is purely formula-driven. Officers can challenge it by filing a review request, but cannot directly edit the score. |
 
 ### Override Design Principle
 

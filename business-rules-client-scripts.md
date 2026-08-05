@@ -1,7 +1,7 @@
 # EcoSentinel AI — Business Rules & Client Scripts
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) — all table and field names follow that schema  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -9,7 +9,7 @@
 
 # Section 1: Business Rules
 
-## 1.1 — Complaint Table (`x_eco_complaint`)
+## 1.1 — Complaint Table (`x_snc_ecosentine_0_complaint`)
 
 ---
 
@@ -17,7 +17,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 100 |
@@ -29,7 +29,7 @@
 ```javascript
 (function executeRule(current, previous) {
     // Generate unique complaint number
-    var generator = new x_eco.EcoComplaintNumberGenerator();
+    var generator = new x_snc_ecosentine_0.EcoComplaintNumberGenerator();
     current.number = generator.generateNumber();
 
     // State defaults to "Received" (1)
@@ -52,7 +52,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | Async |
 | **Trigger** | Insert |
 | **Order** | 200 |
@@ -65,11 +65,11 @@
 ```javascript
 (function executeRule(current, previous) {
     try {
-        var r = new sn_ws.RESTMessageV2('x_eco.EcoSentinel_Webhook', 'POST');
+        var r = new sn_ws.RESTMessageV2('x_snc_ecosentine_0.EcoSentinel_Webhook', 'POST');
         var body = {
             sys_id: current.sys_id.toString(),
             number: current.number.toString(),
-            table: 'x_eco_complaint'
+            table: 'x_snc_ecosentine_0_complaint'
         };
         r.setRequestBody(JSON.stringify(body));
         r.setRequestHeader('Content-Type', 'application/json');
@@ -92,12 +92,12 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | Before |
 | **Trigger** | Update |
 | **Condition** | `current.ai_severity.changes() && !current.ai_severity.nil()` |
 | **Order** | 100 |
-| **Purpose** | When the FastAPI backend PATCHes severity/confidence/rationale onto the complaint, validate the payload, advance state to "AI Verified", and set derived fields in the same database transaction. Agent logging is handled by FL-03/SF-03 or by the backend's explicit `x_eco_agent_log` POST. |
+| **Purpose** | When the FastAPI backend PATCHes severity/confidence/rationale onto the complaint, validate the payload, advance state to "AI Verified", and set derived fields in the same database transaction. Agent logging is handled by FL-03/SF-03 or by the backend's explicit `x_snc_ecosentine_0_agent_decisi` POST. |
 
 **Why needed**: The AI write-back is the single most critical integration point. Without validation, a malformed PATCH could write garbage severity values. Without the state advance, SLAs never start. Keeping this as a before rule avoids recursive updates inside an after rule.
 
@@ -142,7 +142,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | Before |
 | **Trigger** | Update |
 | **Condition** | `current.state.changes()` |
@@ -162,7 +162,7 @@
 
     // Allow only forward movement OR admin override
     if (newState < oldState) {
-        var hasAdminRole = gs.hasRole('x_eco.admin');
+        var hasAdminRole = gs.hasRole('x_snc_ecosentine_0.admin');
         if (!hasAdminRole) {
             current.state = previous.state; // revert
             gs.addErrorMessage('State regression is not permitted. ' +
@@ -179,7 +179,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | Before |
 | **Trigger** | Update |
 | **Condition** | `current.state.changes()` |
@@ -213,7 +213,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **Active** | False |
 | **When** | After |
 | **Trigger** | Update |
@@ -231,7 +231,7 @@
 // })(current, previous);
 ```
 
-**Canonical owner**: `SF-01` sends the actual citizen-facing email. Do not register `x_eco.citizen_status_update` as an active email event in the hackathon build.
+**Canonical owner**: `SF-01` sends the actual citizen-facing email. Do not register `x_snc_ecosentine_0.citizen_status_update` as an active email event in the hackathon build.
 
 ---
 
@@ -239,7 +239,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_finding` |
+| **Table** | `x_snc_ecosentine_0_finding` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 100 |
@@ -254,7 +254,7 @@
 (function executeRule(current, previous) {
     if (!current.parent_inspection.nil()) {
         // Count existing findings for this inspection
-        var ga = new GlideAggregate('x_eco_finding');
+        var ga = new GlideAggregate('x_snc_ecosentine_0_finding');
         ga.addQuery('parent_inspection', current.parent_inspection);
         ga.addAggregate('COUNT');
         ga.query();
@@ -275,7 +275,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_complaint` |
+| **Table** | `x_snc_ecosentine_0_complaint` |
 | **When** | After |
 | **Trigger** | Insert |
 | **Condition** | `!current.linked_facility.nil()` |
@@ -289,7 +289,7 @@
 (function executeRule(current, previous) {
     var facilityId = current.linked_facility.toString();
     // Call Script Include for risk recalculation
-    var riskCalc = new x_eco.EcoRiskCalculator();
+    var riskCalc = new x_snc_ecosentine_0.EcoRiskCalculator();
     riskCalc.recalculate(facilityId);
 
 })(current, previous);
@@ -297,7 +297,7 @@
 
 ---
 
-## 1.2 — Facility Table (`x_eco_facility`)
+## 1.2 — Facility Table (`x_snc_ecosentine_0_facility`)
 
 ---
 
@@ -305,7 +305,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_facility` |
+| **Table** | `x_snc_ecosentine_0_facility` |
 | **When** | Before |
 | **Trigger** | Update |
 | **Condition** | `current.violations_12m.changes() || current.complaints_90d.changes() || current.report_overdue.changes()` |
@@ -368,7 +368,7 @@
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_facility` |
+| **Table** | `x_snc_ecosentine_0_facility` |
 | **When** | After |
 | **Trigger** | Update |
 | **Condition** | `current.high_risk.changes() && current.high_risk == true` |
@@ -404,7 +404,7 @@
 ```javascript
 // Scheduled Script Execution — "EcoSentinel: Check Overdue Reports"
 var today = new GlideDateTime();
-var gr = new GlideRecord('x_eco_facility');
+var gr = new GlideRecord('x_snc_ecosentine_0_facility');
 gr.addQuery('status', 'active');
 gr.addNotNullQuery('report_due_date');
 gr.query();
@@ -441,12 +441,12 @@ while (gr.next()) {
 var cutoff = new GlideDateTime();
 cutoff.addDaysUTC(-90);
 
-var facilities = new GlideRecord('x_eco_facility');
+var facilities = new GlideRecord('x_snc_ecosentine_0_facility');
 facilities.addQuery('status', 'active');
 facilities.query();
 
 while (facilities.next()) {
-    var ga = new GlideAggregate('x_eco_complaint');
+    var ga = new GlideAggregate('x_snc_ecosentine_0_complaint');
     ga.addQuery('linked_facility', facilities.sys_id);
     ga.addQuery('opened_at', '>=', cutoff);
     ga.addAggregate('COUNT');
@@ -466,7 +466,7 @@ while (facilities.next()) {
 
 ---
 
-## 1.3 — Inspection Table (`x_eco_inspection`)
+## 1.3 — Inspection Table (`x_snc_ecosentine_0_inspection`)
 
 ---
 
@@ -474,7 +474,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 50 |
@@ -498,7 +498,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 100 |
@@ -510,7 +510,7 @@ while (facilities.next()) {
 ```javascript
 (function executeRule(current, previous) {
     if (current.inspected_facility.nil() && !current.parent_complaint.nil()) {
-        var complaint = new GlideRecord('x_eco_complaint');
+        var complaint = new GlideRecord('x_snc_ecosentine_0_complaint');
         if (complaint.get(current.parent_complaint)) {
             if (!complaint.linked_facility.nil()) {
                 current.inspected_facility = complaint.linked_facility;
@@ -526,7 +526,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | After |
 | **Trigger** | Update |
 | **Condition** | `current.state.changes()` |
@@ -539,7 +539,7 @@ while (facilities.next()) {
 ```javascript
 (function executeRule(current, previous) {
     var inspState = parseInt(current.state);
-    var complaint = new GlideRecord('x_eco_complaint');
+    var complaint = new GlideRecord('x_snc_ecosentine_0_complaint');
     if (!complaint.get(current.parent_complaint)) return;
 
     // Map inspection states → complaint states
@@ -569,7 +569,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | After |
 | **Trigger** | Update |
 | **Condition** | `current.violation_confirmed.changes() && current.violation_confirmed == true` |
@@ -583,7 +583,7 @@ while (facilities.next()) {
 ```javascript
 (function executeRule(current, previous) {
     // --- 1. Prevent duplicate: check if a legal case already exists for this inspection ---
-    var existing = new GlideRecord('x_eco_legal_case');
+    var existing = new GlideRecord('x_snc_ecosentine_0_legal_case');
     existing.addQuery('source_inspection', current.sys_id);
     existing.query();
     if (existing.hasNext()) {
@@ -592,7 +592,7 @@ while (facilities.next()) {
     }
 
     // --- 2. Validate mandatory evidence ---
-    var findingCount = new GlideAggregate('x_eco_finding');
+    var findingCount = new GlideAggregate('x_snc_ecosentine_0_finding');
     findingCount.addQuery('parent_inspection', current.sys_id);
     findingCount.addAggregate('COUNT');
     findingCount.query();
@@ -607,11 +607,11 @@ while (facilities.next()) {
     }
 
     // --- 3. Get parent complaint ---
-    var complaint = new GlideRecord('x_eco_complaint');
+    var complaint = new GlideRecord('x_snc_ecosentine_0_complaint');
     complaint.get(current.parent_complaint);
 
     // --- 4. Create Legal Case ---
-    var lc = new GlideRecord('x_eco_legal_case');
+    var lc = new GlideRecord('x_snc_ecosentine_0_legal_case');
     lc.initialize();
     lc.setValue('source_complaint', current.parent_complaint.toString());
     lc.setValue('source_inspection', current.sys_id.toString());
@@ -637,7 +637,7 @@ while (facilities.next()) {
 
     // --- 7. Update facility violation count ---
     if (!current.inspected_facility.nil()) {
-        var facility = new GlideRecord('x_eco_facility');
+        var facility = new GlideRecord('x_snc_ecosentine_0_facility');
         if (facility.get(current.inspected_facility)) {
             facility.violations_12m = parseInt(facility.violations_12m) + 1;
             facility.last_inspection_date = new GlideDateTime();
@@ -658,7 +658,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | Before |
 | **Trigger** | Update |
 | **Condition** | `current.violation_confirmed.changes() && current.violation_confirmed == true` |
@@ -670,7 +670,7 @@ while (facilities.next()) {
 **Logic / Pseudocode**:
 ```javascript
 (function executeRule(current, previous) {
-    var ga = new GlideAggregate('x_eco_finding');
+    var ga = new GlideAggregate('x_snc_ecosentine_0_finding');
     ga.addQuery('parent_inspection', current.sys_id);
     ga.addAggregate('COUNT');
     ga.query();
@@ -701,7 +701,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | After |
 | **Trigger** | Update |
 | **Condition** | `current.state.changes() && current.state == 7` (Completed — Dismissed) |
@@ -715,7 +715,7 @@ while (facilities.next()) {
 ```javascript
 (function executeRule(current, previous) {
     // Update complaint state to "Dismissed" (7)
-    var complaint = new GlideRecord('x_eco_complaint');
+    var complaint = new GlideRecord('x_snc_ecosentine_0_complaint');
     if (complaint.get(current.parent_complaint)) {
         complaint.state = 7; // Dismissed
         complaint.setWorkflow(false);
@@ -724,7 +724,7 @@ while (facilities.next()) {
 
     // Update facility last inspection date
     if (!current.inspected_facility.nil()) {
-        var facility = new GlideRecord('x_eco_facility');
+        var facility = new GlideRecord('x_snc_ecosentine_0_facility');
         if (facility.get(current.inspected_facility)) {
             facility.last_inspection_date = new GlideDateTime();
             facility.setWorkflow(false);
@@ -740,7 +740,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_inspection` |
+| **Table** | `x_snc_ecosentine_0_inspection` |
 | **When** | After |
 | **Trigger** | Insert, Update |
 | **Condition** | `current.assigned_to.changes() && !current.assigned_to.nil()` |
@@ -752,7 +752,7 @@ while (facilities.next()) {
 **Logic / Pseudocode**:
 ```javascript
 (function executeRule(current, previous) {
-    gs.eventQueue('x_eco.inspector_assigned', current,
+    gs.eventQueue('x_snc_ecosentine_0.inspector_assigned', current,
         current.assigned_to.toString(),
         'Inspection ' + current.number + ' assigned. Severity: ' +
         current.parent_complaint.ai_severity.getDisplayValue());
@@ -761,7 +761,7 @@ while (facilities.next()) {
 
 ---
 
-## 1.4 — Legal Case Table (`x_eco_legal_case`)
+## 1.4 — Legal Case Table (`x_snc_ecosentine_0_legal_case`)
 
 ---
 
@@ -769,7 +769,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_legal_case` |
+| **Table** | `x_snc_ecosentine_0_legal_case` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 50 |
@@ -781,7 +781,7 @@ while (facilities.next()) {
 ```javascript
 (function executeRule(current, previous) {
     if (!current.source_complaint.nil()) {
-        var existing = new GlideRecord('x_eco_legal_case');
+        var existing = new GlideRecord('x_snc_ecosentine_0_legal_case');
         existing.addQuery('source_complaint', current.source_complaint);
         existing.query();
         if (existing.hasNext()) {
@@ -799,7 +799,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_legal_case` |
+| **Table** | `x_snc_ecosentine_0_legal_case` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 100 |
@@ -825,7 +825,7 @@ while (facilities.next()) {
 
 ---
 
-## 1.5 — Agent Decision Log Table (`x_eco_agent_log`)
+## 1.5 — Agent Decision Log Table (`x_snc_ecosentine_0_agent_decisi`)
 
 ---
 
@@ -833,7 +833,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_agent_log` |
+| **Table** | `x_snc_ecosentine_0_agent_decisi` |
 | **When** | Before |
 | **Trigger** | Update, Delete |
 | **Order** | 1 |
@@ -852,7 +852,7 @@ while (facilities.next()) {
 
 ---
 
-## 1.6 — Environmental Snapshot Table (`x_eco_env_snapshot`)
+## 1.6 — Environmental Snapshot Table (`x_snc_ecosentine_0_env_snapshot`)
 
 ---
 
@@ -860,7 +860,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_env_snapshot` |
+| **Table** | `x_snc_ecosentine_0_env_snapshot` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 50 |
@@ -884,7 +884,7 @@ while (facilities.next()) {
 
 | Property | Value |
 |---|---|
-| **Table** | `x_eco_env_snapshot` |
+| **Table** | `x_snc_ecosentine_0_env_snapshot` |
 | **When** | Before |
 | **Trigger** | Insert |
 | **Order** | 60 |
@@ -895,7 +895,7 @@ while (facilities.next()) {
 **Logic / Pseudocode**:
 ```javascript
 (function executeRule(current, previous) {
-    var existing = new GlideRecord('x_eco_env_snapshot');
+    var existing = new GlideRecord('x_snc_ecosentine_0_env_snapshot');
     existing.addQuery('parent_complaint', current.parent_complaint);
     existing.query();
     if (existing.hasNext()) {
@@ -935,7 +935,7 @@ EcoRiskCalculator.prototype = {
     recalculate: function(facilitySysId) {
         if (!facilitySysId) return;
 
-        var facility = new GlideRecord('x_eco_facility');
+        var facility = new GlideRecord('x_snc_ecosentine_0_facility');
         if (!facility.get(facilitySysId)) return;
 
         var score = 50; // Base score
@@ -943,7 +943,7 @@ EcoRiskCalculator.prototype = {
         // 1. Violation History: +25 per violation in last 12 months (capped at +40)
         var cutoff12m = new GlideDateTime();
         cutoff12m.addDaysUTC(-365);
-        var violations = new GlideAggregate('x_eco_inspection');
+        var violations = new GlideAggregate('x_snc_ecosentine_0_inspection');
         violations.addQuery('inspected_facility', facilitySysId);
         violations.addQuery('violation_confirmed', true);
         violations.addQuery('sys_created_on', '>=', cutoff12m);
@@ -979,7 +979,7 @@ EcoRiskCalculator.prototype = {
         // 4. Complaint Frequency: +3 points per complaint in last 90 days (capped at +30)
         var cutoff90d = new GlideDateTime();
         cutoff90d.addDaysUTC(-90);
-        var complaints = new GlideAggregate('x_eco_complaint');
+        var complaints = new GlideAggregate('x_snc_ecosentine_0_complaint');
         complaints.addQuery('linked_facility', facilitySysId);
         complaints.addQuery('opened_at', '>=', cutoff90d);
         complaints.addAggregate('COUNT');
@@ -1043,7 +1043,7 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
             return JSON.stringify(result);
         }
 
-        var gr = new GlideRecord('x_eco_complaint');
+        var gr = new GlideRecord('x_snc_ecosentine_0_complaint');
         gr.addQuery('number', number);
         gr.addQuery('citizen_email', email);
         gr.query();
@@ -1063,7 +1063,7 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
 
     // Called from officer complaint form to check role
     hasOfficerRole: function() {
-        return gs.hasRole('x_eco.officer') || gs.hasRole('x_eco.admin');
+        return gs.hasRole('x_snc_ecosentine_0.officer') || gs.hasRole('x_snc_ecosentine_0.admin');
     },
 
     type: 'EcoComplaintUtils'
@@ -1089,7 +1089,7 @@ EcoAgentLogger.prototype = {
     log: function(params) {
         // params: agentName, agentType, linkedTable, linkedRecord, linkedNumber,
         //         inputSummary, outputSummary, confidence, status, durationMs, errorDetails
-        var logGr = new GlideRecord('x_eco_agent_log');
+        var logGr = new GlideRecord('x_snc_ecosentine_0_agent_decisi');
         logGr.initialize();
         logGr.setValue('agent_name', params.agentName);
         logGr.setValue('agent_type', params.agentType || 'native');
@@ -1127,13 +1127,13 @@ EcoConstants.prototype = {
     initialize: function() {},
 
     tables: {
-        complaint: 'x_eco_complaint',
-        facility: 'x_eco_facility',
-        inspection: 'x_eco_inspection',
-        finding: 'x_eco_finding',
-        legalCase: 'x_eco_legal_case',
-        agentLog: 'x_eco_agent_log',
-        envSnapshot: 'x_eco_env_snapshot'
+        complaint: 'x_snc_ecosentine_0_complaint',
+        facility: 'x_snc_ecosentine_0_facility',
+        inspection: 'x_snc_ecosentine_0_inspection',
+        finding: 'x_snc_ecosentine_0_finding',
+        legalCase: 'x_snc_ecosentine_0_legal_case',
+        agentLog: 'x_snc_ecosentine_0_agent_decisi',
+        envSnapshot: 'x_snc_ecosentine_0_env_snapshot'
     },
 
     complaintState: {
@@ -1283,29 +1283,29 @@ EcoInspectionWorkflow.prototype = {
 
 | ID | Name | Table | When | Trigger | Condition Summary |
 |---|---|---|---|---|---|
-| BR-C01 | Set Complaint Defaults | `x_eco_complaint` | Before | Insert | Always on insert |
-| BR-C02 | Trigger AI Webhook | `x_eco_complaint` | Async | Insert | **Disabled by default; fallback only if FL-01 is not used** |
-| BR-C03 | Handle AI Write-Back | `x_eco_complaint` | Before | Update | `ai_severity` changes and is not empty |
-| BR-C04 | Prevent State Regression | `x_eco_complaint` | Before | Update | `state` changes |
-| BR-C05 | Timestamp Status Transitions | `x_eco_complaint` | Before | Update | `state` changes |
-| BR-C06 | Citizen Notification | `x_eco_complaint` | After | Update | **Disabled by default; fallback only. `SF-01` owns citizen-facing email** |
-| BR-C07 | Update Facility Complaint Count | `x_eco_complaint` | After | Insert | `linked_facility` not empty |
-| BR-F01 | Recalculate Risk Score | `x_eco_facility` | Before | Update | `violations_12m`, `complaints_90d`, or `report_overdue` changes |
-| BR-F02 | High-Risk Facility Alert | `x_eco_facility` | After | Update | **Disabled by default; `SF-02` owns high-risk alerts** |
+| BR-C01 | Set Complaint Defaults | `x_snc_ecosentine_0_complaint` | Before | Insert | Always on insert |
+| BR-C02 | Trigger AI Webhook | `x_snc_ecosentine_0_complaint` | Async | Insert | **Disabled by default; fallback only if FL-01 is not used** |
+| BR-C03 | Handle AI Write-Back | `x_snc_ecosentine_0_complaint` | Before | Update | `ai_severity` changes and is not empty |
+| BR-C04 | Prevent State Regression | `x_snc_ecosentine_0_complaint` | Before | Update | `state` changes |
+| BR-C05 | Timestamp Status Transitions | `x_snc_ecosentine_0_complaint` | Before | Update | `state` changes |
+| BR-C06 | Citizen Notification | `x_snc_ecosentine_0_complaint` | After | Update | **Disabled by default; fallback only. `SF-01` owns citizen-facing email** |
+| BR-C07 | Update Facility Complaint Count | `x_snc_ecosentine_0_complaint` | After | Insert | `linked_facility` not empty |
+| BR-F01 | Recalculate Risk Score | `x_snc_ecosentine_0_facility` | Before | Update | `violations_12m`, `complaints_90d`, or `report_overdue` changes |
+| BR-F02 | High-Risk Facility Alert | `x_snc_ecosentine_0_facility` | After | Update | **Disabled by default; `SF-02` owns high-risk alerts** |
 | BR-F03 | Check Report Overdue | Scheduled Job | Daily 02:00 | — | Scans all active facilities |
 | BR-F04 | Refresh 90-Day Count | Scheduled Job | Daily 03:00 | — | Scans all active facilities |
-| BR-I01 | Prevent Orphan Inspection | `x_eco_inspection` | Before | Insert | `parent_complaint` is empty |
-| BR-I02 | Inherit Facility from Complaint | `x_eco_inspection` | Before | Insert | `inspected_facility` is empty |
-| BR-I03 | Update Parent Complaint State | `x_eco_inspection` | After | Update | `state` changes |
-| BR-I04 | Create Legal Case on Violation | `x_eco_inspection` | After | Update | **Disabled by default; fallback only if FL-05 is not used** |
-| BR-I05 | Enforce Evidence Before Confirm | `x_eco_inspection` | Before | Update | `violation_confirmed` changes to true |
-| BR-I06 | Update Facility on Dismissed | `x_eco_inspection` | After | Update | **Disabled by default; fallback only if FL-05 is not used** |
-| BR-I07 | Inspector Assignment Notification | `x_eco_inspection` | After | Insert/Update | `assigned_to` changes |
-| BR-L01 | Prevent Duplicate Legal Case | `x_eco_legal_case` | Before | Insert | `source_complaint` already has a legal case |
-| BR-L02 | Prevent Case Without Evidence | `x_eco_legal_case` | Before | Insert | `source_complaint` or `source_inspection` empty |
-| BR-A01 | Enforce Append-Only Log | `x_eco_agent_log` | Before | Update/Delete | Always |
-| BR-E01 | Prevent Orphan Snapshot | `x_eco_env_snapshot` | Before | Insert | `parent_complaint` is empty |
-| BR-E02 | Prevent Duplicate Snapshot | `x_eco_env_snapshot` | Before | Insert | Snapshot already exists for complaint |
+| BR-I01 | Prevent Orphan Inspection | `x_snc_ecosentine_0_inspection` | Before | Insert | `parent_complaint` is empty |
+| BR-I02 | Inherit Facility from Complaint | `x_snc_ecosentine_0_inspection` | Before | Insert | `inspected_facility` is empty |
+| BR-I03 | Update Parent Complaint State | `x_snc_ecosentine_0_inspection` | After | Update | `state` changes |
+| BR-I04 | Create Legal Case on Violation | `x_snc_ecosentine_0_inspection` | After | Update | **Disabled by default; fallback only if FL-05 is not used** |
+| BR-I05 | Enforce Evidence Before Confirm | `x_snc_ecosentine_0_inspection` | Before | Update | `violation_confirmed` changes to true |
+| BR-I06 | Update Facility on Dismissed | `x_snc_ecosentine_0_inspection` | After | Update | **Disabled by default; fallback only if FL-05 is not used** |
+| BR-I07 | Inspector Assignment Notification | `x_snc_ecosentine_0_inspection` | After | Insert/Update | `assigned_to` changes |
+| BR-L01 | Prevent Duplicate Legal Case | `x_snc_ecosentine_0_legal_case` | Before | Insert | `source_complaint` already has a legal case |
+| BR-L02 | Prevent Case Without Evidence | `x_snc_ecosentine_0_legal_case` | Before | Insert | `source_complaint` or `source_inspection` empty |
+| BR-A01 | Enforce Append-Only Log | `x_snc_ecosentine_0_agent_decisi` | Before | Update/Delete | Always |
+| BR-E01 | Prevent Orphan Snapshot | `x_snc_ecosentine_0_env_snapshot` | Before | Insert | `parent_complaint` is empty |
+| BR-E02 | Prevent Duplicate Snapshot | `x_snc_ecosentine_0_env_snapshot` | Before | Insert | Snapshot already exists for complaint |
 
 ---
 
@@ -1450,7 +1450,7 @@ function onChange(control, oldValue, newValue, isLoading) {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_complaint` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_complaint` — Default view |
 | **Type** | onLoad |
 | **Purpose** | Render the AI rationale, severity, and confidence prominently in a styled info message at the top of the form so any officer reviewing the complaint immediately sees the AI's reasoning. |
 
@@ -1490,10 +1490,10 @@ function onLoad() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_complaint` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_complaint` — Default view |
 | **Type** | onLoad |
 | **Field** | — |
-| **Purpose** | Hide the manual severity override fields unless the user has the `x_eco.officer` or `x_eco.admin` role. |
+| **Purpose** | Hide the manual severity override fields unless the user has the `x_snc_ecosentine_0.officer` or `x_snc_ecosentine_0.admin` role. |
 
 **Why needed**: Inspectors should not be able to override the AI's severity — that's an officer-level decision. Without this gate, any user with write access could change the severity, undermining the AI classification and SLA assignment.
 
@@ -1501,7 +1501,7 @@ function onLoad() {
 ```javascript
 function onLoad() {
     // GlideAjax call to check role (cannot reliably check roles client-side in scoped apps)
-    var ga = new GlideAjax('x_eco.EcoComplaintUtils');
+    var ga = new GlideAjax('x_snc_ecosentine_0.EcoComplaintUtils');
     ga.addParam('sysparm_name', 'hasOfficerRole');
     ga.getXMLAnswer(function(answer) {
         var isOfficer = (answer === 'true');
@@ -1517,7 +1517,7 @@ function onLoad() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_complaint` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_complaint` — Default view |
 | **Type** | onChange |
 | **Field** | `override_severity` |
 | **Purpose** | Make `override_reason` mandatory when an officer sets an override severity, and clear it when the override is removed. |
@@ -1551,7 +1551,7 @@ function onChange(control, oldValue, newValue, isLoading) {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_inspection` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_inspection` — Default view |
 | **Type** | onChange |
 | **Field** | `violation_confirmed` |
 | **Purpose** | When the inspector toggles "Violation Confirmed" to true, show and make mandatory the `violation_type` field. When false, hide it. |
@@ -1578,7 +1578,7 @@ function onChange(control, oldValue, newValue, isLoading) {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_inspection` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_inspection` — Default view |
 | **Type** | onLoad |
 | **Purpose** | Set the initial visibility of violation-dependent fields when the form first loads. Also auto-populate GPS if available. |
 
@@ -1613,7 +1613,7 @@ function onLoad() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_inspection` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_inspection` — Default view |
 | **Type** | onSubmit |
 | **Purpose** | If the inspector is confirming a violation, require that raw_notes are filled and GPS is captured. |
 
@@ -1656,7 +1656,7 @@ function onSubmit() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_facility` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_facility` — Default view |
 | **Type** | onLoad |
 | **Purpose** | Make the risk score and related fields read-only (they are system-calculated), and display a color-coded info message based on the risk tier. |
 
@@ -1695,7 +1695,7 @@ function onLoad() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_facility` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_facility` — Default view |
 | **Type** | onChange |
 | **Field** | `sector` |
 | **Purpose** | Warn the admin that changing sector to Chemical or Mining will add +20 to the risk score on the next recalculation. |
@@ -1727,7 +1727,7 @@ function onChange(control, oldValue, newValue, isLoading) {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_legal_case` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_legal_case` — Default view |
 | **Type** | onLoad |
 | **Purpose** | Make the source complaint, source inspection, and violating facility fields read-only (they should never be changed after creation) and display a warning if the case narrative is empty (indicating the Legal Case Summary Agent hasn't run yet). |
 
@@ -1758,7 +1758,7 @@ function onLoad() {
 
 | Property | Value |
 |---|---|
-| **Table / View** | `x_eco_legal_case` — Default view |
+| **Table / View** | `x_snc_ecosentine_0_legal_case` — Default view |
 | **Type** | onChange |
 | **Field** | `penalty_type` |
 | **Purpose** | Only show the `penalty_amount` field when `penalty_type` = "fine". Hide for all other penalty types. |
@@ -1789,16 +1789,16 @@ function onChange(control, oldValue, newValue, isLoading) {
 | CS-P01 | Auto-Capture GPS | Record Producer (Service Portal) | onLoad | — | Capture citizen GPS silently |
 | CS-P02 | Validate Before Submit | Record Producer (Service Portal) | onSubmit | — | Block submission without description/location/category |
 | CS-P03 | Category Tips | Record Producer (Service Portal) | onChange | `incident_category` | Show photo tips per category |
-| CS-C01 | AI Rationale Info Box | `x_eco_complaint` | onLoad | — | Display AI reasoning prominently |
-| CS-C02 | Officer Override Gate | `x_eco_complaint` | onLoad | — | Hide override fields for non-officers |
-| CS-C03 | Override Reason Mandatory | `x_eco_complaint` | onChange | `override_severity` | Require reason when overriding AI |
-| CS-I01 | Violation Toggle Fields | `x_eco_inspection` | onChange | `violation_confirmed` | Show/hide violation type |
-| CS-I02 | Inspection Form Init | `x_eco_inspection` | onLoad | — | Set initial visibility + GPS capture |
-| CS-I03 | Validate Violation Submit | `x_eco_inspection` | onSubmit | — | Require notes and GPS for violations |
-| CS-F01 | Risk Score Indicator | `x_eco_facility` | onLoad | — | Color-coded risk display |
-| CS-F02 | Sector Change Warning | `x_eco_facility` | onChange | `sector` | Warn about risk score impact |
-| CS-L01 | Evidence Chain Lock | `x_eco_legal_case` | onLoad | — | Lock source refs + narrative warning |
-| CS-L02 | Penalty Amount Toggle | `x_eco_legal_case` | onChange | `penalty_type` | Show amount only for fines |
+| CS-C01 | AI Rationale Info Box | `x_snc_ecosentine_0_complaint` | onLoad | — | Display AI reasoning prominently |
+| CS-C02 | Officer Override Gate | `x_snc_ecosentine_0_complaint` | onLoad | — | Hide override fields for non-officers |
+| CS-C03 | Override Reason Mandatory | `x_snc_ecosentine_0_complaint` | onChange | `override_severity` | Require reason when overriding AI |
+| CS-I01 | Violation Toggle Fields | `x_snc_ecosentine_0_inspection` | onChange | `violation_confirmed` | Show/hide violation type |
+| CS-I02 | Inspection Form Init | `x_snc_ecosentine_0_inspection` | onLoad | — | Set initial visibility + GPS capture |
+| CS-I03 | Validate Violation Submit | `x_snc_ecosentine_0_inspection` | onSubmit | — | Require notes and GPS for violations |
+| CS-F01 | Risk Score Indicator | `x_snc_ecosentine_0_facility` | onLoad | — | Color-coded risk display |
+| CS-F02 | Sector Change Warning | `x_snc_ecosentine_0_facility` | onChange | `sector` | Warn about risk score impact |
+| CS-L01 | Evidence Chain Lock | `x_snc_ecosentine_0_legal_case` | onLoad | — | Lock source refs + narrative warning |
+| CS-L02 | Penalty Amount Toggle | `x_snc_ecosentine_0_legal_case` | onChange | `penalty_type` | Show amount only for fines |
 
 ---
 

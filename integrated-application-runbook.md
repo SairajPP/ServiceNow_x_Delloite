@@ -34,9 +34,9 @@ Add these fields before wiring the flows:
 
 | Table | Field | Type | Purpose |
 |---|---|---|---|
-| `x_eco_complaint` | `webhook_sent_at` | Date/Time | Records when FL-01 dispatched the FastAPI webhook. |
-| `x_eco_complaint` | `ai_processing_status` | Choice | Tracks `not_started`, `queued`, `processing`, `completed`, `failed`, `fallback`. |
-| `x_eco_env_snapshot` | `data_source` | Choice | Tracks `success`, `partial`, or `error` for external environmental data. |
+| `x_snc_ecosentine_0_complaint` | `webhook_sent_at` | Date/Time | Records when FL-01 dispatched the FastAPI webhook. |
+| `x_snc_ecosentine_0_complaint` | `ai_processing_status` | Choice | Tracks `not_started`, `queued`, `processing`, `completed`, `failed`, `fallback`. |
+| `x_snc_ecosentine_0_env_snapshot` | `data_source` | Choice | Tracks `success`, `partial`, or `error` for external environmental data. |
 
 ## Build Order
 
@@ -62,7 +62,7 @@ Add these fields before wiring the flows:
 | Legal case routing | Add finding, complete inspection as violation confirmed. | `FL-05` calls `EcoInspectionWorkflow.confirmViolation()`, creates exactly one legal case, links it to inspection, sets complaint to `Action Taken`, and recalculates risk. |
 | Dismissal routing | Complete inspection as dismissed. | `FL-05` calls `EcoInspectionWorkflow.dismissInspection()`, sets complaint to `Dismissed`, and updates facility last inspection date. |
 | Duplicate protection | Re-run FL-05 or update same completed inspection again. | No second legal case is created. |
-| Agent log immutability | Try editing/deleting `x_eco_agent_log`. | `BR-A01` aborts update/delete. |
+| Agent log immutability | Try editing/deleting `x_snc_ecosentine_0_agent_decisi`. | `BR-A01` aborts update/delete. |
 | Snapshot uniqueness | Try creating second snapshot for same complaint. | `BR-E02` blocks duplicate snapshot. |
 
 ## Known Boundaries

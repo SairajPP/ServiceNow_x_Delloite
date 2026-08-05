@@ -1,7 +1,7 @@
 # EcoSentinel AI — Virtual Agent Status-Check Topic
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [script-includes.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/script-includes.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -78,7 +78,7 @@ var trackerNum = vaInputs.tracking_number.toString().trim();
 // If conversation is anonymous, prompt for email in step 2.5
 var citizenEmail = vaInputs.citizen_email.toString().trim();
 
-var utils = new x_eco.EcoComplaintUtils();
+var utils = new x_snc_ecosentine_0.EcoComplaintUtils();
 var resultJson = utils.lookupComplaint({
     number: trackerNum,
     email: citizenEmail

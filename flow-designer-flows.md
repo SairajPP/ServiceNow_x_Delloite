@@ -1,7 +1,7 @@
 # EcoSentinel AI — Flow Designer Flows
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [business-rules-client-scripts.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/business-rules-client-scripts.md) · [roles-groups-users.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/roles-groups-users.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -35,7 +35,7 @@ Build these **first** — they are called by multiple parent flows.
 
 | Variable | Type | Description |
 |---|---|---|
-| `complaint_record` | Reference → `x_eco_complaint` | The complaint record driving the notification. |
+| `complaint_record` | Reference → `x_snc_ecosentine_0_complaint` | The complaint record driving the notification. |
 | `status_label` | String | Human-readable status label (e.g. "Inspector Assigned"). |
 | `custom_message` | String (optional) | Additional detail for the email body (e.g. "Your inspector is en route"). |
 
@@ -48,7 +48,7 @@ Build these **first** — they are called by multiple parent flows.
    - Append `custom_message` if provided.
 3. **Action: Send Email** — Email Notification action using the built-in Flow Designer "Send Email" step.
    - To: `complaint_record.citizen_email`
-   - Template: `x_eco.citizen_status_update_template`
+   - Template: `x_snc_ecosentine_0.citizen_status_update_template`
 4. **Action: Add Comment** — Write a customer-visible comment on the complaint record: `"Status update sent to citizen: ${status_label}"`. This ensures the activity stream reflects every outbound communication.
 
 ### Error Handling
@@ -70,17 +70,17 @@ Build these **first** — they are called by multiple parent flows.
 
 | Variable | Type | Description |
 |---|---|---|
-| `facility_sys_id` | String | sys_id of the `x_eco_facility` record to recalculate. |
+| `facility_sys_id` | String | sys_id of the `x_snc_ecosentine_0_facility` record to recalculate. |
 
 ### Steps
 
-1. **Action: Look Up Record** — Get the `x_eco_facility` record by `facility_sys_id`.
+1. **Action: Look Up Record** — Get the `x_snc_ecosentine_0_facility` record by `facility_sys_id`.
 2. **Action: Look Up Records (Aggregate)** — Count confirmed violations in the last 12 months:
-   - Table: `x_eco_inspection`
+   - Table: `x_snc_ecosentine_0_inspection`
    - Filter: `inspected_facility = facility_sys_id` AND `violation_confirmed = true` AND `sys_created_on >= (today - 365 days)`
    - Store result in flow variable `violations_12m`.
 3. **Action: Look Up Records (Aggregate)** — Count complaints in the last 90 days:
-   - Table: `x_eco_complaint`
+   - Table: `x_snc_ecosentine_0_complaint`
    - Filter: `linked_facility = facility_sys_id` AND `opened_at >= (today - 90 days)`
    - Store result in flow variable `complaints_90d`.
 4. **Flow Logic: Script Step** — Calculate the score:
@@ -135,7 +135,7 @@ Build these **first** — they are called by multiple parent flows.
 
 ### Steps
 
-1. **Action: Create Record** on `x_eco_agent_log` — Map all inputs to fields. Set `decision_at` to `Now`.
+1. **Action: Create Record** on `x_snc_ecosentine_0_agent_decisi` — Map all inputs to fields. Set `decision_at` to `Now`.
 
 ---
 
@@ -148,7 +148,7 @@ Build these **first** — they are called by multiple parent flows.
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Created on `x_eco_complaint` |
+| **Trigger** | Record Created on `x_snc_ecosentine_0_complaint` |
 | **Trigger Condition** | Always (every new complaint record) |
 | **Purpose** | Owns complaint intake orchestration: sends the outbound webhook ping to the FastAPI backend for AI classification, notifies the citizen, and leaves fallback recovery to FL-02. |
 | **Run As** | System |
@@ -168,7 +168,7 @@ Build these **first** — they are called by multiple parent flows.
 1. **Action: Validate Intake State** — Confirm `state = 1` (Received). If blank, update to `1` and add a work note. This is defensive only; BR-C01 remains the primary owner of insert defaults.
 2. **Action: Wait for Duration** — Wait for **5 seconds**. This gives the Service Portal widget sufficient time to finish uploading the photo attachment to the new complaint `sys_id` before the webhook fires.
 3. **Action: Integration Hub → REST Step** — Send outbound POST to FastAPI backend.
-   - **REST Message**: `x_eco.EcoSentinel_Webhook`
+   - **REST Message**: `x_snc_ecosentine_0.EcoSentinel_Webhook`
    - **HTTP Method**: `POST`
    - **Endpoint**: `https://[FASTAPI_URL]/webhook/complaint`
    - **Headers**: `Content-Type: application/json`, `Authorization: Bearer ${api_key}`
@@ -177,7 +177,7 @@ Build these **first** — they are called by multiple parent flows.
      {
        "sys_id": "${trigger_record.sys_id}",
        "number": "${trigger_record.number}",
-       "table": "x_eco_complaint",
+       "table": "x_snc_ecosentine_0_complaint",
        "lat": "${trigger_record.incident_lat}",
        "lng": "${trigger_record.incident_lng}"
      }
@@ -206,7 +206,7 @@ Build these **first** — they are called by multiple parent flows.
 
 ### Trigger Condition (Scheduled Query)
 
-Query `x_eco_complaint` where:
+Query `x_snc_ecosentine_0_complaint` where:
 - `state = 1` (Received)
 - `ai_severity IS EMPTY`
 - `opened_at < (Now - 60 minutes)`
@@ -235,7 +235,7 @@ Query `x_eco_complaint` where:
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_complaint` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_complaint` |
 | **Trigger Condition** | `ai_severity` changes AND `ai_severity` is not empty AND `state = 2` (AI Verified) |
 | **Purpose** | Auto-assigns an inspector by zone, creates the Inspection record, attaches the severity-based SLA, and notifies the inspector. |
 | **Run As** | System |
@@ -272,14 +272,14 @@ Query `x_eco_complaint` where:
 3. **Action: Look Up Records** — Find available inspectors in `target_group`:
    - Table: `sys_user_grmember`
    - Filter: `group = target_group` AND `user.active = true`
-   - Order by: Least assigned open inspections (round-robin load balancing via GlideAggregate count of `x_eco_inspection` where `assigned_to = user` AND `state < 6`).
+   - Order by: Least assigned open inspections (round-robin load balancing via GlideAggregate count of `x_snc_ecosentine_0_inspection` where `assigned_to = user` AND `state < 6`).
    - Set flow variable `assigned_inspector` = first result.
 
 4. **Flow Logic: If** no inspector found (empty group or all inactive):
    - **Subflow Call: SF-04 (Zone Fallback Escalation)** — see below.
    - **End** (SF-04 handles the rest).
 
-5. **Action: Create Record** on `x_eco_inspection`:
+5. **Action: Create Record** on `x_snc_ecosentine_0_inspection`:
    - `parent_complaint = trigger_record.sys_id`
    - `inspected_facility = trigger_record.linked_facility`
    - `assigned_to = assigned_inspector`
@@ -296,11 +296,11 @@ Query `x_eco_complaint` where:
 
 7. **Flow Logic: Set SLA** — Based on `ai_severity`:
    - **If** `ai_severity = high`:
-     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - High Severity` on the created `x_eco_inspection` record.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - High Severity` on the created `x_snc_ecosentine_0_inspection` record.
    - **If** `ai_severity = medium`:
-     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Medium Severity` on the created `x_eco_inspection` record.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Medium Severity` on the created `x_snc_ecosentine_0_inspection` record.
    - **If** `ai_severity = low`:
-     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Low Severity` on the created `x_eco_inspection` record.
+     - The OOB Task SLA engine automatically attaches `EcoSentinel Inspection - Low Severity` on the created `x_snc_ecosentine_0_inspection` record.
    - *Note*: SLA attachment is handled by the OOB SLA engine using the canonical inspection-level definitions in `sla-definitions.md`. No manual flow step is needed.
 
 8. **Action: Send Email** — Notify the assigned inspector:
@@ -325,7 +325,7 @@ Query `x_eco_complaint` where:
 
 | Variable | Type | Description |
 |---|---|---|
-| `complaint_record` | Reference → `x_eco_complaint` | The complaint needing an inspector. |
+| `complaint_record` | Reference → `x_snc_ecosentine_0_complaint` | The complaint needing an inspector. |
 | `original_zone` | String | The zone where no inspector was found. |
 
 ### Steps
@@ -394,7 +394,7 @@ Configure via **SLA Definition → Workflow/Flow** settings:
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_inspection` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_inspection` |
 | **Trigger Condition** | `state` changes to `6` (Completed — Violation Confirmed) OR `state` changes to `7` (Completed — Dismissed) |
 | **Purpose** | Primary owner for inspection outcome orchestration: if a violation is confirmed, creates/links the Legal Case and recalculates risk; if dismissed, closes the complaint. |
 | **Run As** | System |
@@ -423,7 +423,7 @@ Configure via **SLA Definition → Workflow/Flow** settings:
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_facility` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_facility` |
 | **Trigger Condition** | `violations_12m` changes OR `complaints_90d` changes OR `report_overdue` changes |
 | **Purpose** | Wrapper flow that calls the risk recalculation subflow whenever a facility's input metrics change. |
 | **Run As** | System |
@@ -443,7 +443,7 @@ This flow exists so that **any update path** (business rule, scheduled job, manu
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Created on `x_eco_legal_case` |
+| **Trigger** | Record Created on `x_snc_ecosentine_0_legal_case` |
 | **Trigger Condition** | Always (every new legal case) |
 | **Purpose** | Compiles complaint details, inspection evidence, facility history, and AI rationale into a structured case narrative. Calls the native Legal Case Summary Agent (Now Assist) to generate the narrative. |
 | **Run As** | System |
@@ -453,10 +453,10 @@ This flow exists so that **any update path** (business rule, scheduled job, manu
 1. **Action: Look Up Record** — Get source complaint (`legal_case.source_complaint`).
 2. **Action: Look Up Record** — Get source inspection (`legal_case.source_inspection`).
 3. **Action: Look Up Records** — Get all findings for the inspection:
-   - Table: `x_eco_finding`, Filter: `parent_inspection = inspection.sys_id`, Order by `finding_number ASC`.
+   - Table: `x_snc_ecosentine_0_finding`, Filter: `parent_inspection = inspection.sys_id`, Order by `finding_number ASC`.
 4. **Action: Look Up Record** — Get the violating facility (`legal_case.violating_facility`).
 5. **Action: Look Up Record** — Get the environmental snapshot:
-   - Table: `x_eco_env_snapshot`, Filter: `parent_complaint = complaint.sys_id`.
+   - Table: `x_snc_ecosentine_0_env_snapshot`, Filter: `parent_complaint = complaint.sys_id`.
 
 6. **Flow Logic: Script Step** — Compile the raw evidence package into a structured text block:
    ```
@@ -511,7 +511,7 @@ This flow exists so that **any update path** (business rule, scheduled job, manu
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_inspection` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_inspection` |
 | **Trigger Condition** | `state` changes to `4` (Findings Submitted) AND `raw_notes` is not empty |
 | **Purpose** | Calls the native Now Assist Inspection Report Agent to transform the inspector's free-form field notes into a structured professional report. |
 | **Run As** | System |
@@ -545,7 +545,7 @@ This flow exists so that **any update path** (business rule, scheduled job, manu
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_complaint` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_complaint` |
 | **Trigger Condition** | `state` changes |
 | **Purpose** | Master notification flow — fires on every complaint state change and delegates to the citizen notification subflow with the appropriate message. |
 | **Run As** | System |
@@ -617,7 +617,7 @@ This flow ensures **every** state transition results in a citizen notification, 
 | Property | Value |
 |---|---|
 | **Type** | Flow |
-| **Trigger** | Record Updated on `x_eco_legal_case` |
+| **Trigger** | Record Updated on `x_snc_ecosentine_0_legal_case` |
 | **Trigger Condition** | `state` changes to `6` (Resolved) OR `state` changes to `7` (Withdrawn) |
 | **Purpose** | When a Legal Case reaches final resolution, updates the linked parent Complaint to its final closed state and notifies the citizen of the outcome. |
 | **Run As** | System |
@@ -650,7 +650,7 @@ This flow ensures **every** state transition results in a citizen notification, 
 |---|---|---|---|---|
 | SF-01 | Send Citizen Notification | Subflow | Called by flows | Email to citizen |
 | SF-02 | Recalculate Facility Risk Score | Subflow | Called by flows | Updated `risk_score` on facility |
-| SF-03 | Log Agent Decision | Subflow | Called by flows | New `x_eco_agent_log` record |
+| SF-03 | Log Agent Decision | Subflow | Called by flows | New `x_snc_ecosentine_0_agent_decisi` record |
 | SF-04 | Zone Fallback Escalation | Subflow | Called by FL-03 | Escalated inspector assignment |
 | FL-01 | Complaint Intake & AI Webhook | Flow | Complaint created | Webhook sent, citizen notified |
 | FL-02 | AI Verification Fallback | Flow | Scheduled (15 min) | Unclassified complaints get default severity |
@@ -764,10 +764,10 @@ FL-09: Citizen Status Update
 | Flow | Direction | HTTP Method | Endpoint | Payload | Auth |
 |---|---|---|---|---|---|
 | FL-01 | ServiceNow → FastAPI | `POST` | `https://[FASTAPI_URL]/webhook/complaint` | `{ sys_id, number, table, lat, lng }` | Bearer Token |
-| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `GET` | `https://[INSTANCE].service-now.com/api/now/table/x_eco_complaint/{sys_id}` | — | OAuth preferred; Basic Auth only for PDI demo |
+| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `GET` | `https://[INSTANCE].service-now.com/api/now/table/x_snc_ecosentine_0_complaint/{sys_id}` | — | OAuth preferred; Basic Auth only for PDI demo |
 | FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `GET` | `https://[INSTANCE].service-now.com/api/now/attachment/{sys_id}/file` | — | OAuth preferred; Basic Auth only for PDI demo |
-| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `PATCH` | `https://[INSTANCE].service-now.com/api/now/table/x_eco_complaint/{sys_id}` | `{ ai_severity, ai_confidence, ai_rationale, ai_image_caption, ai_classified_at, ai_processing_status }` | OAuth preferred; Basic Auth only for PDI demo |
-| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `POST` | `https://[INSTANCE].service-now.com/api/now/table/x_eco_env_snapshot` | `{ parent_complaint, aqi_value, aqi_category, data_source, wind_speed, ... }` | OAuth preferred; Basic Auth only for PDI demo |
-| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `POST` | `https://[INSTANCE].service-now.com/api/now/table/x_eco_agent_log` | `{ agent_name, linked_table, linked_record, input_summary, output_summary, ... }` | OAuth preferred; Basic Auth only for PDI demo |
+| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `PATCH` | `https://[INSTANCE].service-now.com/api/now/table/x_snc_ecosentine_0_complaint/{sys_id}` | `{ ai_severity, ai_confidence, ai_rationale, ai_image_caption, ai_classified_at, ai_processing_status }` | OAuth preferred; Basic Auth only for PDI demo |
+| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `POST` | `https://[INSTANCE].service-now.com/api/now/table/x_snc_ecosentine_0_env_snapshot` | `{ parent_complaint, aqi_value, aqi_category, data_source, wind_speed, ... }` | OAuth preferred; Basic Auth only for PDI demo |
+| FastAPI → ServiceNow | FastAPI → ServiceNow Table API | `POST` | `https://[INSTANCE].service-now.com/api/now/table/x_snc_ecosentine_0_agent_decisi` | `{ agent_name, linked_table, linked_record, input_summary, output_summary, ... }` | OAuth preferred; Basic Auth only for PDI demo |
 
 > **Build Order**: SF-01 → SF-02 → SF-03 → SF-04 → BR-C01 → FL-01 → FL-02 → FL-03 → FL-04 → FL-05 → FL-06 → FL-07 → FL-08 → FL-09 → FL-10. Leave BR-C02 inactive unless FL-01 is intentionally disabled.

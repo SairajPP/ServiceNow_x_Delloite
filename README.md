@@ -42,7 +42,7 @@ Check it's alive: `curl http://localhost:8000/health`
 
 In ServiceNow, per `integration-contract.md` Section 4:
 - Create the `ecosentinel.api` integration user (web-service-only, least-privilege role)
-- Create the Outbound REST Message `x_eco.EcoSentinel_Webhook` pointing `FL-01` at
+- Create the Outbound REST Message `x_snc_ecosentine_0.EcoSentinel_Webhook` pointing `FL-01` at
   `https://<your-fastapi-host>/webhook/complaint` with header
   `Authorization: Bearer <FASTAPI_WEBHOOK_BEARER_TOKEN>`
 

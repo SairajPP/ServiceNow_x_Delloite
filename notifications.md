@@ -1,7 +1,7 @@
 # EcoSentinel AI — Notifications Specification
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [roles-groups-users.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/roles-groups-users.md) · [flow-designer-flows.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/flow-designer-flows.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -16,11 +16,11 @@
 | **Citizen: Complaint Received** | Trigger: Flow `SF-01` (Send Email action), called by `FL-01` | Citizen Email field | Email | `FL-01` (Flow) |
 | **Citizen: Status Transition** | Trigger: Flow `SF-01` (Send Email action), called by `FL-09` | Citizen Email field | Email | `FL-09` (Flow) |
 | **Citizen: Final Resolution** | Trigger: Flow `SF-01` (Send Email action), called by `FL-05` or `FL-11` | Citizen Email field | Email | `FL-05` / `FL-11` (Flows) |
-| **Inspector: New Assignment** | Table: `x_eco_inspection` (Assigned to changes) | `assigned_to` User | Email & Mobile In-App Notification | `FL-03` (Flow) |
+| **Inspector: New Assignment** | Table: `x_snc_ecosentine_0_inspection` (Assigned to changes) | `assigned_to` User | Email & Mobile In-App Notification | `FL-03` (Flow) |
 | **Inspector: SLA Warning (75%)** | Task SLA SLA Workflow (75% Elapsed) | `assigned_to` User | Email & Mobile In-App Notification | `FL-04` (Flow) |
-| **Compliance Officer: High-Risk Alert**| Event: `x_eco.facility_high_risk` | `EcoSentinel — Compliance Officers` Group | Email | `SF-02` (Subflow) |
+| **Compliance Officer: High-Risk Alert**| Event: `x_snc_ecosentine_0.facility_high_risk` | `EcoSentinel — Compliance Officers` Group | Email | `SF-02` (Subflow) |
 | **Compliance Officer: SLA Breach** | Task SLA SLA Workflow (100% Breached) | `EcoSentinel — Compliance Officers` Group | Email | `FL-04` (Flow) |
-| **Legal Handler: Case Assignment** | Table: `x_eco_legal_case` (Insert/Assignment) | `assigned_officer` User | Email | `FL-05` / `FL-07` (Flows) |
+| **Legal Handler: Case Assignment** | Table: `x_snc_ecosentine_0_legal_case` (Insert/Assignment) | `assigned_officer` User | Email | `FL-05` / `FL-07` (Flows) |
 | **Leadership: Weekly Insights** | Scheduled Job / Script Execution (Weekly) | `EcoSentinel — Executive Leadership` Group | Email | `FL-10` (Flow) |
 
 ---
@@ -114,7 +114,7 @@ To prevent spamming the citizen (e.g. if the status changes from "Received" $\ri
 ## 2.2 — Inspector Notifications (Email & Mobile In-App)
 
 ### Notification 1: New Inspection Assignment
-* **Trigger Table**: `x_eco_inspection` (When `assigned_to` is populated)
+* **Trigger Table**: `x_snc_ecosentine_0_inspection` (When `assigned_to` is populated)
 * **Recipient**: `current.assigned_to`
 * **Subject**: `🚨 NEW ASSIGNMENT: Inspection ${number} - Severity: ${parent_complaint.ai_severity}`
 * **Message Template Body**:
@@ -138,7 +138,7 @@ ${parent_complaint.ai_rationale}
 Please update your status on the Now Mobile app to "En Route" when heading to the location. You must log findings and capture GPS-tagged photos on-site before completing the ticket.
 
 Open in ServiceNow Mobile:
-[App link to x_eco_inspection record]
+[App link to x_snc_ecosentine_0_inspection record]
 ```
 
 ### Notification 2: SLA Approaching Breach (75% Warning)
@@ -165,7 +165,7 @@ If you are delayed due to weather, traffic, or access constraints, please docume
 ## 2.3 — Compliance Officer Notifications (Email)
 
 ### Notification 1: High-Risk Facility Alert (Risk Score $\ge$ 80)
-* **Trigger Event**: `x_eco.facility_high_risk`
+* **Trigger Event**: `x_snc_ecosentine_0.facility_high_risk`
 * **Fired From**: Subflow `SF-02` (Risk recalculation)
 * **Recipient**: `EcoSentinel — Compliance Officers` Group
 * **Subject**: `⚠️ CRITICAL RISK ALERT: ${name} (Score: ${risk_score})`
@@ -188,7 +188,7 @@ Recalculation Drivers:
 This facility has been flagged for priority inspection. Future complaints linked to this facility will bypass standard prioritization loops and be routed for immediate physical audit.
 
 Review Facility File:
-https://[instance].service-now.com/nav_to.do?uri=x_eco_facility.do?sys_id=${sys_id}
+https://[instance].service-now.com/nav_to.do?uri=x_snc_ecosentine_0_facility.do?sys_id=${sys_id}
 ```
 
 ### Notification 2: SLA Breached Escalation
@@ -212,7 +212,7 @@ Incident Details:
 A formal breach has been logged against the field zone group. The Compliance Officers group has been assigned to investigate the delay.
 
 Review SLA Breakdown:
-https://[instance].service-now.com/nav_to.do?uri=x_eco_inspection.do?sys_id=${sys_id}
+https://[instance].service-now.com/nav_to.do?uri=x_snc_ecosentine_0_inspection.do?sys_id=${sys_id}
 ```
 
 ---
@@ -220,7 +220,7 @@ https://[instance].service-now.com/nav_to.do?uri=x_eco_inspection.do?sys_id=${sy
 ## 2.4 — Legal Case Handler Notifications (Email)
 
 ### Notification: Legal Case Assigned
-* **Trigger Table**: `x_eco_legal_case` (When assigned to case handler)
+* **Trigger Table**: `x_snc_ecosentine_0_legal_case` (When assigned to case handler)
 * **Recipient**: `current.assigned_officer`
 * **Subject**: `⚖️ LEGAL CASE ASSIGNED: ${number} - ${violating_facility.name}`
 * **Message Template Body**:
@@ -241,7 +241,7 @@ ${case_narrative}
 You are required to compile the formal notice of violation, set penalty recommendations, and issue the compliance notice to the facility's registered contact within the legal workflow timeline.
 
 Review Case File:
-https://[instance].service-now.com/nav_to.do?uri=x_eco_legal_case.do?sys_id=${sys_id}
+https://[instance].service-now.com/nav_to.do?uri=x_snc_ecosentine_0_legal_case.do?sys_id=${sys_id}
 ```
 
 ---

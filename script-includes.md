@@ -1,7 +1,7 @@
 # EcoSentinel AI — Script Includes
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [business-rules-client-scripts.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/business-rules-client-scripts.md) · [flow-designer-flows.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/flow-designer-flows.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -47,14 +47,14 @@ EcoRiskCalculator.prototype = {
     recalculate: function(facilitySysId) {
         if (!facilitySysId) return;
 
-        var facility = new GlideRecord('x_eco_facility');
+        var facility = new GlideRecord('x_snc_ecosentine_0_facility');
         if (facility.get(facilitySysId)) {
             var score = 50; // Base score
 
             // 1. Violation History: +25 per violation in last 12 months (capped at +40)
             var cutoff12m = new GlideDateTime();
             cutoff12m.addDaysUTC(-365);
-            var violations = new GlideAggregate('x_eco_inspection');
+            var violations = new GlideAggregate('x_snc_ecosentine_0_inspection');
             violations.addQuery('inspected_facility', facilitySysId);
             violations.addQuery('violation_confirmed', true);
             violations.addQuery('sys_created_on', '>=', cutoff12m);
@@ -90,7 +90,7 @@ EcoRiskCalculator.prototype = {
             // 4. Complaint Frequency: +3 points per complaint in last 90 days (capped at +30)
             var cutoff90d = new GlideDateTime();
             cutoff90d.addDaysUTC(-90);
-            var complaints = new GlideAggregate('x_eco_complaint');
+            var complaints = new GlideAggregate('x_snc_ecosentine_0_complaint');
             complaints.addQuery('linked_facility', facilitySysId);
             complaints.addQuery('opened_at', '>=', cutoff90d);
             complaints.addAggregate('COUNT');
@@ -148,7 +148,7 @@ var EcoComplaintUtils = Class.create();
 EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
 
     hasOfficerRole: function() {
-        return gs.hasRole('x_eco.officer') || gs.hasRole('x_eco.admin');
+        return gs.hasRole('x_snc_ecosentine_0.officer') || gs.hasRole('x_snc_ecosentine_0.admin');
     },
 
     lookupComplaint: function(params) {
@@ -161,7 +161,7 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
             return JSON.stringify(result);
         }
 
-        var gr = new GlideRecord('x_eco_complaint');
+        var gr = new GlideRecord('x_snc_ecosentine_0_complaint');
         gr.addQuery('number', number);
         gr.addQuery('citizen_email', email);
         gr.query();
@@ -187,7 +187,7 @@ EcoComplaintUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {
 
 ## 2.3 — EcoAgentLogger
 * **Client Callable**: No
-* **Purpose**: Centralised helper that inserts logging entries to `x_eco_agent_log` while preserving immutability constraints.
+* **Purpose**: Centralised helper that inserts logging entries to `x_snc_ecosentine_0_agent_decisi` while preserving immutability constraints.
 * **Called From**: `BR-C03`, `BR-I04`, `FL-02`, `FL-05`, `FL-07`, `FL-08`, `FL-10`
 
 ### Function Signature
@@ -207,7 +207,7 @@ EcoAgentLogger.prototype = {
             return null;
         }
 
-        var logGr = new GlideRecord('x_eco_agent_log');
+        var logGr = new GlideRecord('x_snc_ecosentine_0_agent_decisi');
         logGr.initialize();
         logGr.setValue('agent_name', params.agentName);
         logGr.setValue('agent_type', params.agentType || 'native');
@@ -246,13 +246,13 @@ var EcoConstants = Class.create();
 EcoConstants.prototype = {
     initialize: function() {},
     tables: {
-        complaint: 'x_eco_complaint',
-        facility: 'x_eco_facility',
-        inspection: 'x_eco_inspection',
-        legalCase: 'x_eco_legal_case',
-        agentLog: 'x_eco_agent_log',
-        envSnapshot: 'x_eco_env_snapshot',
-        finding: 'x_eco_finding'
+        complaint: 'x_snc_ecosentine_0_complaint',
+        facility: 'x_snc_ecosentine_0_facility',
+        inspection: 'x_snc_ecosentine_0_inspection',
+        legalCase: 'x_snc_ecosentine_0_legal_case',
+        agentLog: 'x_snc_ecosentine_0_agent_decisi',
+        envSnapshot: 'x_snc_ecosentine_0_env_snapshot',
+        finding: 'x_snc_ecosentine_0_finding'
     },
     
     complaintState: {
@@ -353,7 +353,7 @@ EcoComplaintNumberGenerator.prototype = {
         var prefix = 'ES-' + dateString + '-';
         
         // Query to find the highest sequence number created today
-        var gr = new GlideRecord('x_eco_complaint');
+        var gr = new GlideRecord('x_snc_ecosentine_0_complaint');
         gr.addQuery('number', 'STARTSWITH', prefix);
         gr.orderByDesc('number');
         gr.setLimit(1);
@@ -410,7 +410,7 @@ EcoUrgencyScoreCalculator.prototype = {
     initialize: function() {},
 
     getCompositeUrgency: function(complaintSysId) {
-        var complaint = new GlideRecord('x_eco_complaint');
+        var complaint = new GlideRecord('x_snc_ecosentine_0_complaint');
         if (!complaint.get(complaintSysId)) return 0;
 
         // Map AI severity to raw weight (60% of composite)
@@ -423,7 +423,7 @@ EcoUrgencyScoreCalculator.prototype = {
         // Map facility risk index if linked (40% of composite)
         var facilityWeight = 0;
         if (!complaint.linked_facility.nil()) {
-            var facility = new GlideRecord('x_eco_facility');
+            var facility = new GlideRecord('x_snc_ecosentine_0_facility');
             if (facility.get(complaint.linked_facility)) {
                 var riskScore = parseInt(facility.getValue('risk_score'), 10) || 0;
                 facilityWeight = Math.round(riskScore * 0.40);

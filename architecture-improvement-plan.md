@@ -36,7 +36,7 @@ The main improvement is not adding more features. It is clarifying ownership, re
 7. FastAPI PATCHes `ai_severity`, `ai_confidence`, `ai_rationale`, `ai_image_caption`, and `ai_classified_at`.
 8. `BR-C03` validates the write-back and sets `state = AI Verified` plus derived `priority`.
 9. `FL-03` creates/assigns the inspection and starts downstream SLA/notification handling.
-10. FastAPI creates an `x_eco_env_snapshot` and `x_eco_agent_log` record for auditability.
+10. FastAPI creates an `x_snc_ecosentine_0_env_snapshot` and `x_snc_ecosentine_0_agent_decisi` record for auditability.
 11. `FL-05` calls `EcoInspectionWorkflow` when the inspection completes, either creating/linking a legal case or dismissing the complaint.
 12. If FastAPI never writes back, `FL-02` applies a medium-severity fallback after 60 minutes.
 
@@ -44,8 +44,8 @@ The main improvement is not adding more features. It is clarifying ownership, re
 
 | Priority | Item | Done When |
 |---|---|---|
-| P0 | Add `webhook_sent_at` Date/Time field to `x_eco_complaint` | FL-01 no longer relies on `sys_updated_on`. |
-| P0 | Add `ai_processing_status` choice field to `x_eco_complaint` | Queued, completed, failed, and fallback AI states are visible. |
+| P0 | Add `webhook_sent_at` Date/Time field to `x_snc_ecosentine_0_complaint` | FL-01 no longer relies on `sys_updated_on`. |
+| P0 | Add `ai_processing_status` choice field to `x_snc_ecosentine_0_complaint` | Queued, completed, failed, and fallback AI states are visible. |
 | P0 | Keep BR-C02 inactive | Only one webhook is emitted per complaint insert. |
 | P0 | Keep BR-I04 and BR-I06 inactive when FL-05 is active | Only one legal case and one complaint closure path exists. |
 | P0 | Convert BR-C03 to before-update | No `current.update()` or secondary GlideRecord update is used on the same complaint. |

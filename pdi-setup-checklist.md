@@ -1,7 +1,7 @@
 # EcoSentinel AI — PDI Setup & Prerequisites Checklist
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Platform**: ServiceNow PDI (Washington DC / Xanadu release — AI Agent Heavy)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -25,7 +25,7 @@
 | **Integrated Risk Management (IRM)** | `com.snc.grc` | Optional: Facility risk indicators and GRC entity linkage | Activate via Plugin Activation if not present |
 | **Legal Service Delivery** | `com.snc.legal_service_delivery` | Optional: Legal Case table extension and workspace | Activate via Plugin Activation if not present |
 
-**Note**: IRM and Legal Service Delivery are optional. If not activated, extend `task` instead of `sn_legal_case`, and use standalone `x_eco_facility` without GRC profile linkage.
+**Note**: IRM and Legal Service Delivery are optional. If not activated, extend `task` instead of `sn_legal_case`, and use standalone `x_snc_ecosentine_0_facility` without GRC profile linkage.
 
 ---
 
@@ -36,18 +36,18 @@
 2. Click **Create Application**
 3. Enter:
    - **Name**: `EcoSentinel AI`
-   - **Scope**: Auto-generated (e.g., `x_eco_` or `x_12345_ecosentinel`)
+   - **Scope**: Auto-generated (e.g., `x_snc_ecosentine_0_` or `x_12345_ecosentinel`)
    - **Version**: `1.0.0`
 4. Record the actual scope prefix generated — substitute this throughout all table and field definitions
 
 ### 2.2 Application Roles
 Create custom application roles via **System Security → Roles**:
-- `x_eco.inspector`
-- `x_eco.officer`
-- `x_eco.legal_handler`
-- `x_eco.executive`
-- `x_eco.admin`
-- `x_eco.integration_user`
+- `x_snc_ecosentine_0.inspector`
+- `x_snc_ecosentine_0.officer`
+- `x_snc_ecosentine_0.legal_handler`
+- `x_snc_ecosentine_0.executive`
+- `x_snc_ecosentine_0.admin`
+- `x_snc_ecosentine_0.integration_user`
 
 ### 2.3 Assignment Groups
 Create assignment groups via **User Administration → Groups**:
@@ -91,9 +91,9 @@ Assign appropriate roles to each group.
 ### 3.4 ServiceNow Integration User
 1. Create user: `ecosentinel.api`
 2. Set `Web service access only = true`
-3. Assign role: `x_eco.integration_user`
+3. Assign role: `x_snc_ecosentine_0.integration_user`
 4. Generate strong password (or configure OAuth 2.0 client)
-5. Grant Table API access to: `x_eco_complaint`, `x_eco_env_snapshot`, `x_eco_agent_log`
+5. Grant Table API access to: `x_snc_ecosentine_0_complaint`, `x_snc_ecosentine_0_env_snapshot`, `x_snc_ecosentine_0_agent_decisi`
 
 ---
 
@@ -133,7 +133,7 @@ FASTAPI_WEBHOOK_BEARER_TOKEN=SecureTokenCheckedByFastAPI
 
 ### 5.1 Outbound REST Message
 1. Navigate to **System Web Services → Outbound → REST Messages**
-2. Create new: `x_eco.EcoSentinel_Webhook`
+2. Create new: `x_snc_ecosentine_0.EcoSentinel_Webhook`
 3. Endpoint: `https://[FASTAPI_BACKEND_URL]/webhook/complaint`
 4. HTTP Method: `POST`
 5. Authentication: Create Connection & Credential Alias with Bearer Token
@@ -144,16 +144,16 @@ FASTAPI_WEBHOOK_BEARER_TOKEN=SecureTokenCheckedByFastAPI
 ### 5.2 Number Maintenance
 1. Navigate to **System Definition → Number Maintenance**
 2. Create new number format:
-   - **Table**: `x_eco_complaint`
+   - **Table**: `x_snc_ecosentine_0_complaint`
    - **Prefix**: `ES`
    - **Number Format**: `ES-YYYYMMDD-####` (configured via Script Include `EcoComplaintNumberGenerator`)
 
 ### 5.3 SLA Definitions
 1. Navigate to **Service Level Management → SLA Definitions**
 2. Create three SLA definitions (per `sla-definitions.md`):
-   - `EcoSentinel Inspection - High Severity` (24 hours on `x_eco_inspection`)
-   - `EcoSentinel Inspection - Medium Severity` (72 hours on `x_eco_inspection`)
-   - `EcoSentinel Inspection - Low Severity` (7 days on `x_eco_inspection`)
+   - `EcoSentinel Inspection - High Severity` (24 hours on `x_snc_ecosentine_0_inspection`)
+   - `EcoSentinel Inspection - Medium Severity` (72 hours on `x_snc_ecosentine_0_inspection`)
+   - `EcoSentinel Inspection - Low Severity` (7 days on `x_snc_ecosentine_0_inspection`)
 
 ### 5.4 Service Portal Configuration
 1. Navigate to **Service Portal → Portals**
@@ -193,7 +193,7 @@ FASTAPI_WEBHOOK_BEARER_TOKEN=SecureTokenCheckedByFastAPI
 
 ### 6.3 AI Control Tower
 1. Navigate to **Now Assist → AI Control Tower**
-2. Configure dashboard to display `x_eco_agent_log` records
+2. Configure dashboard to display `x_snc_ecosentine_0_agent_decisi` records
 3. Set up filters: by agent name, status, confidence score, date range
 4. Test audit trail by triggering agent decisions
 
@@ -265,7 +265,7 @@ FASTAPI_WEBHOOK_BEARER_TOKEN=SecureTokenCheckedByFastAPI
 ### 9.1 AI Agent Log Immutability Exception
 - **Scenario**: Incorrect data logged due to agent bug; must be corrected
 - **Procedure**:
-  1. Admin creates new correcting entry in `x_eco_agent_log` with `status = "correction"`
+  1. Admin creates new correcting entry in `x_snc_ecosentine_0_agent_decisi` with `status = "correction"`
   2. Original incorrect entry remains untouched (append-only)
   3. Correction entry references original via `linked_record_number` and explains the correction
 
@@ -327,9 +327,9 @@ These items are **out of scope** for the 8-day hackathon but should be addressed
 4. **Push Notifications**: Configure native mobile push for inspector alerts
 5. **Offline Mobile Support**: Configure Now Mobile offline sync profiles
 6. **Data Retention Policy**: Define PII retention and cleanup schedules
-   - `x_eco_complaint` citizen contact fields (`citizen_name`, `citizen_email`, `citizen_phone`) are retained for the lifecycle of the PDI/demo only and manually purged post-hackathon.
+   - `x_snc_ecosentine_0_complaint` citizen contact fields (`citizen_name`, `citizen_email`, `citizen_phone`) are retained for the lifecycle of the PDI/demo only and manually purged post-hackathon.
    - `sys_attachment` citizen and finding photos are retained for the lifecycle of the PDI/demo only and manually purged post-hackathon.
-   - `x_eco_agent_log` AI decision audit records are retained for the lifecycle of the PDI/demo only and manually purged post-hackathon unless exported for judging evidence.
+   - `x_snc_ecosentine_0_agent_decisi` AI decision audit records are retained for the lifecycle of the PDI/demo only and manually purged post-hackathon unless exported for judging evidence.
 7. **High Availability**: Deploy FastAPI backend on redundant infrastructure
 8. **API Key Rotation**: Implement automated rotation for external API keys
 9. **Performance Testing**: Load test with realistic complaint volumes

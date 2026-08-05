@@ -7,7 +7,7 @@ This document configures the field experience for EcoSentinel inspectors. It is 
 ## Section 1: Experience Overview
 
 - **App**: Standard **Now Mobile** app (using ServiceNow Mobile Studio / Mobile App Builder to configure the `x_eco` scope experience).
-- **Primary User**: Field Inspector (requires the `x_eco.inspector` role).
+- **Primary User**: Field Inspector (requires the `x_snc_ecosentine_0.inspector` role).
 - **Important Boundary Note**: Now Mobile is strictly for authenticated internal field staff. The citizen-facing public form is handled entirely via the Service Portal (`service-portal-pages-widgets.md`). Citizens do not download an app or log in; inspectors do.
 
 ---
@@ -17,7 +17,7 @@ This document configures the field experience for EcoSentinel inspectors. It is 
 When an inspector opens the Now Mobile app, their primary workspace is their assigned queue.
 
 - **List Name**: "My Assigned Inspections"
-- **Source Table**: `x_eco_inspection`
+- **Source Table**: `x_snc_ecosentine_0_inspection`
 - **Filter Condition**: `[Assigned to] [is (dynamic)] [Me]` AND `[State] [is one of] [Scheduled, En Route, On Site]`
 - **Sort Order**: Sorted by SLA Due Date (ascending) so the most urgent inspections are automatically surfaced at the top.
 - **Card/List Item Fields Shown**:
@@ -38,7 +38,7 @@ The form is designed to be completed entirely with a thumb while on-site.
 | `parent_complaint` | Read-only Reference | No | Displays context from the original citizen report (Initial Photo, Description). |
 | `inspected_facility`| Reference | No | Auto-populated if known, but inspector can select/change the facility on-site. |
 | `raw_notes` | Text Area | Yes | Free text captured by the inspector. **Crucial**: This text is automatically ingested by the Inspection Report Agent (`ai-agent-specs.md`) to draft formal violation notices. |
-| Evidence Photos (via `x_eco_finding` child records) | Photo Capture Button | Yes (if Violation Confirmed) | Each photo capture creates a distinct `x_eco_finding` child record with `finding_type = photo_evidence` and the photo attached to that finding. Multiple photos = multiple finding records. |
+| Evidence Photos (via `x_snc_ecosentine_0_finding` child records) | Photo Capture Button | Yes (if Violation Confirmed) | Each photo capture creates a distinct `x_snc_ecosentine_0_finding` child record with `finding_type = photo_evidence` and the photo attached to that finding. Multiple photos = multiple finding records. |
 | `inspector_lat` and `inspector_lng` | Location Auto-Tag | Yes | Auto-captured on form load using device GPS. Two separate fields for latitude and longitude. Editable text field provided as a fallback if the GPS is wildly inaccurate due to rural/industrial interference. |
 | `violation_confirmed` | Boolean Toggle | Yes | "Is there an actionable environmental violation?" Toggle changes UI logic below. |
 | `violation_type` | Choice List | Conditional | Hidden by default. If `violation_confirmed` is True, this becomes visible and Mandatory. |
@@ -75,29 +75,29 @@ Inspectors receive native in-app/email notifications directly to their device (c
 
 | Mobile Form Field | Mapped Table | Internal Field Name | Type |
 |---|---|---|---|
-| Parent Complaint | `x_eco_inspection` | `parent_complaint` | Reference |
-| Inspected Facility | `x_eco_inspection` | `inspected_facility` | Reference |
-| Inspector Raw Notes | `x_eco_inspection` | `raw_notes` | String (Multi-line) |
-| Evidence Photos & Findings | `x_eco_finding` | Multiple child records with `finding_type`, `description`, `photo` (attachment) | Child table records |
-| Inspector GPS Latitude | `x_eco_inspection` | `inspector_lat` | Floating Point |
-| Inspector GPS Longitude | `x_eco_inspection` | `inspector_lng` | Floating Point |
-| Violation Confirmed | `x_eco_inspection` | `violation_confirmed` | Boolean |
-| Violation Type | `x_eco_inspection` | `violation_type` | Choice |
-| Inspection State | `x_eco_inspection` | `state` | Integer (Choice) |
+| Parent Complaint | `x_snc_ecosentine_0_inspection` | `parent_complaint` | Reference |
+| Inspected Facility | `x_snc_ecosentine_0_inspection` | `inspected_facility` | Reference |
+| Inspector Raw Notes | `x_snc_ecosentine_0_inspection` | `raw_notes` | String (Multi-line) |
+| Evidence Photos & Findings | `x_snc_ecosentine_0_finding` | Multiple child records with `finding_type`, `description`, `photo` (attachment) | Child table records |
+| Inspector GPS Latitude | `x_snc_ecosentine_0_inspection` | `inspector_lat` | Floating Point |
+| Inspector GPS Longitude | `x_snc_ecosentine_0_inspection` | `inspector_lng` | Floating Point |
+| Violation Confirmed | `x_snc_ecosentine_0_inspection` | `violation_confirmed` | Boolean |
+| Violation Type | `x_snc_ecosentine_0_inspection` | `violation_type` | Choice |
+| Inspection State | `x_snc_ecosentine_0_inspection` | `state` | Integer (Choice) |
 
 ---
 
 ## Section 7: Role/ACL Cross-Check
 
-The entire Now Mobile experience is gated by the `x_eco.inspector` role.
+The entire Now Mobile experience is gated by the `x_snc_ecosentine_0.inspector` role.
 
 **What an Inspector CAN do:**
-- Read their *assigned* `x_eco_inspection` records.
-- Read the parent `x_eco_complaint` linked to their assignment.
+- Read their *assigned* `x_snc_ecosentine_0_inspection` records.
+- Read the parent `x_snc_ecosentine_0_complaint` linked to their assignment.
 - Create attachments and update their assigned inspection notes/state.
 
 **What an Inspector explicitly CANNOT see on mobile (ACL Restricted):**
 - Unassigned complaints or inspections assigned to others.
 - The overarching `risk_score` calculation logic or historical financials of a Facility (to prevent bias during the inspection).
-- `x_eco_legal_case` records (handling fines/litigation is strictly for Legal Handlers/Compliance Officers). Inspectors have no access to Legal Case records, not even read-only.
-- `x_eco_agent_log` records (AI Control Tower auditing is restricted to Admins/Officers).
+- `x_snc_ecosentine_0_legal_case` records (handling fines/litigation is strictly for Legal Handlers/Compliance Officers). Inspectors have no access to Legal Case records, not even read-only.
+- `x_snc_ecosentine_0_agent_decisi` records (AI Control Tower auditing is restricted to Admins/Officers).

@@ -1,7 +1,7 @@
 # EcoSentinel AI — Integration Contract Specification
 
 > **Scoped Application**: EcoSentinel AI  
-> **Scope Prefix**: `x_eco_`  
+> **Scope Prefix**: `x_snc_ecosentine_0_`  
 > **Reference Documents**: [tables.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/tables.md) · [business-rules-client-scripts.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/business-rules-client-scripts.md) · [roles-groups-users.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/roles-groups-users.md) · [flow-designer-flows.md](file:///C:/Users/yuvra/OneDrive/Desktop/Servicenow/ServiceNowxDelloite/flow-designer-flows.md)  
 > **Hackathon**: ServiceNow × Deloitte 2026 — Team VertexNow
 
@@ -51,7 +51,7 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 |---|---|
 | **Direction** | ServiceNow → FastAPI |
 | **Endpoint / Method** | `POST /webhook/complaint` |
-| **Trigger** | Insert of `x_eco_complaint` record via `FL-01` |
+| **Trigger** | Insert of `x_snc_ecosentine_0_complaint` record via `FL-01` |
 | **Auth Method** | `Authorization: Bearer <API_TOKEN>` header |
 
 ### Request Payload
@@ -60,7 +60,7 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 {
   "sys_id": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
   "number": "ES-20260731-0042",
-  "table": "x_eco_complaint",
+  "table": "x_snc_ecosentine_0_complaint",
   "lat": 18.9629,
   "lng": 72.8277
 }
@@ -88,12 +88,12 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 | Property | Value |
 |---|---|
 | **Direction** | FastAPI → ServiceNow |
-| **Endpoint / Method** | `GET /api/now/table/x_eco_complaint/{sys_id}` |
+| **Endpoint / Method** | `GET /api/now/table/x_snc_ecosentine_0_complaint/{sys_id}` |
 | **Trigger** | Receipt of Webhook Ping |
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
 
 ### Request URL
-`https://[INSTANCE].service-now.com/api/now/table/x_eco_complaint/8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d`
+`https://[INSTANCE].service-now.com/api/now/table/x_snc_ecosentine_0_complaint/8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d`
 
 ### Response Payload (HTTP 200 OK)
 
@@ -124,7 +124,7 @@ The EcoSentinel AI integration establishes a secure, asynchronous bi-directional
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
 
 ### Step 1: Look up Attachment Metadata
-FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment?sysparm_query=table_name=x_eco_complaint^table_sys_id=8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d`
+FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment?sysparm_query=table_name=x_snc_ecosentine_0_complaint^table_sys_id=8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d`
 
 **Response:**
 ```json
@@ -247,11 +247,11 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 | Property | Value |
 |---|---|
 | **Direction** | FastAPI → ServiceNow |
-| **Endpoint / Method** | `PATCH /api/now/table/x_eco_complaint/{sys_id}` |
+| **Endpoint / Method** | `PATCH /api/now/table/x_snc_ecosentine_0_complaint/{sys_id}` |
 | **Trigger** | Completion of Severity Fusion reasoning engine |
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
 | **Validation** | FastAPI **MUST** enforce JSON schema validation on the AI output (e.g. using Pydantic). `severity` must be exactly one of: `['low', 'medium', 'high']`. |
-| **Fallback** | If JSON parsing fails or validation fails: (1) Set `ai_severity` = `medium`, (2) Set `ai_confidence` = 0, (3) Set `ai_rationale` = "AI classification failed — defaulting to medium severity for manual review", (4) Set `ai_processing_status` = `error`, (5) Post to `x_eco_agent_log` with `status = 'error'`. |
+| **Fallback** | If JSON parsing fails or validation fails: (1) Set `ai_severity` = `medium`, (2) Set `ai_confidence` = 0, (3) Set `ai_rationale` = "AI classification failed — defaulting to medium severity for manual review", (4) Set `ai_processing_status` = `error`, (5) Post to `x_snc_ecosentine_0_agent_decisi` with `status = 'error'`. |
 
 ### Request Payload
 
@@ -286,7 +286,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 | Property | Value |
 |---|---|
 | **Direction** | FastAPI → ServiceNow |
-| **Endpoint / Method** | `POST /api/now/table/x_eco_env_snapshot` |
+| **Endpoint / Method** | `POST /api/now/table/x_snc_ecosentine_0_env_snapshot` |
 | **Trigger** | Bundled in the write-back pipeline (fired after PATCHing complaint) |
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
 
@@ -327,7 +327,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 | Property | Value |
 |---|---|
 | **Direction** | FastAPI → ServiceNow |
-| **Endpoint / Method** | `POST /api/now/table/x_eco_agent_log` |
+| **Endpoint / Method** | `POST /api/now/table/x_snc_ecosentine_0_agent_decisi` |
 | **Trigger** | Bundled in the write-back pipeline (fired after snapshot POST) |
 | **Auth Method** | OAuth 2.0 preferred. PDI demo may use HTTP Basic Auth (User: `ecosentinel.api`) with web-service-only and least-privilege ACLs. |
 
@@ -337,7 +337,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 {
   "agent_name": "severity_fusion",
   "agent_type": "external",
-  "linked_table": "x_eco_complaint",
+  "linked_table": "x_snc_ecosentine_0_complaint",
   "linked_record": "8a9b2c3d4e5f6a7b8c9d0e1f2a3b4c5d",
   "linked_record_number": "ES-20260731-0042",
   "input_summary": "Image: 'dense black smoke stack'. Citizen text: 'Thick black smoke from boiler chimney'. AQI: 210. Wind speed: 1.5 km/h.",
@@ -359,7 +359,7 @@ FastAPI calls `GET https://[INSTANCE].service-now.com/api/now/attachment/0a1b2c3
 ```
 
 ### Architectural Note: Logging Strategy
-We log the agent decision as a **separate POST call** to the Table API rather than bundling it inside the Complaint PATCH. This ensures the logging table (`x_eco_agent_log`) remains write-once/append-only via standard Table ACLs, whereas a custom bundled API could bypass these security boundary controls.
+We log the agent decision as a **separate POST call** to the Table API rather than bundling it inside the Complaint PATCH. This ensures the logging table (`x_snc_ecosentine_0_agent_decisi`) remains write-once/append-only via standard Table ACLs, whereas a custom bundled API could bypass these security boundary controls.
 
 ---
 
@@ -367,24 +367,24 @@ We log the agent decision as a **separate POST call** to the Table API rather th
 
 | FastAPI Response Field | ServiceNow Table | ServiceNow Target Field | Type | Description / Format |
 |---|---|---|---|---|
-| `ai_severity` | `x_eco_complaint` | `ai_severity` | Choice | `low`, `medium`, `high` |
-| `ai_confidence` | `x_eco_complaint` | `ai_confidence` | Integer | 0 to 100 |
-| `ai_image_caption` | `x_eco_complaint` | `ai_image_caption` | String | Output from OpenAI Vision. *Note: OpenAI returns raw plain text. The FastAPI backend acts as an adapter, wrapping this text into a `{ "caption": "..." }` schema before processing.* |
-| `ai_rationale` | `x_eco_complaint` | `ai_rationale` | String | Human-readable reasoning string |
-| `ai_classified_at` | `x_eco_complaint` | `ai_classified_at` | Date/Time | `yyyy-MM-dd HH:mm:ss` |
-| `ai_processing_status` | `x_eco_complaint` | `ai_processing_status` | Choice | `not_started`, `queued`, `processing`, `completed`, `failed`, or `fallback` |
-| `sys_id` | `x_eco_env_snapshot` | `parent_complaint` | Reference | sys_id of Complaint record |
-| `aqi_value` | `x_eco_env_snapshot` | `aqi_value` | Integer | Numeric air quality index |
-| `aqi_category` | `x_eco_env_snapshot` | `aqi_category` | Choice | Map to bands: `good`, `moderate`, `very_unhealthy`, etc. |
-| `wind_speed` | `x_eco_env_snapshot` | `wind_speed` | Decimal | Metric wind speed in km/h |
-| `wind_direction` | `x_eco_env_snapshot` | `wind_direction` | String | Cardinal direction (e.g. "WSW") |
-| `temperature` | `x_eco_env_snapshot` | `temperature` | Decimal | Degrees Celsius |
-| `weather_condition`| `x_eco_env_snapshot` | `weather_condition` | String | Descriptive weather |
-| `humidity` | `x_eco_env_snapshot` | `humidity` | Integer | Humidity percentage (0-100) |
-| `data_source` | `x_eco_env_snapshot` | `data_source` | Choice | `success`, `partial`, or `error` |
-| `agent_name` | `x_eco_agent_log` | `agent_name` | Choice | `severity_fusion` |
-| `input_summary` | `x_eco_agent_log` | `input_summary` | String | Summary of values queried |
-| `output_summary` | `x_eco_agent_log` | `output_summary` | String | Summary of calculations |
+| `ai_severity` | `x_snc_ecosentine_0_complaint` | `ai_severity` | Choice | `low`, `medium`, `high` |
+| `ai_confidence` | `x_snc_ecosentine_0_complaint` | `ai_confidence` | Integer | 0 to 100 |
+| `ai_image_caption` | `x_snc_ecosentine_0_complaint` | `ai_image_caption` | String | Output from OpenAI Vision. *Note: OpenAI returns raw plain text. The FastAPI backend acts as an adapter, wrapping this text into a `{ "caption": "..." }` schema before processing.* |
+| `ai_rationale` | `x_snc_ecosentine_0_complaint` | `ai_rationale` | String | Human-readable reasoning string |
+| `ai_classified_at` | `x_snc_ecosentine_0_complaint` | `ai_classified_at` | Date/Time | `yyyy-MM-dd HH:mm:ss` |
+| `ai_processing_status` | `x_snc_ecosentine_0_complaint` | `ai_processing_status` | Choice | `not_started`, `queued`, `processing`, `completed`, `failed`, or `fallback` |
+| `sys_id` | `x_snc_ecosentine_0_env_snapshot` | `parent_complaint` | Reference | sys_id of Complaint record |
+| `aqi_value` | `x_snc_ecosentine_0_env_snapshot` | `aqi_value` | Integer | Numeric air quality index |
+| `aqi_category` | `x_snc_ecosentine_0_env_snapshot` | `aqi_category` | Choice | Map to bands: `good`, `moderate`, `very_unhealthy`, etc. |
+| `wind_speed` | `x_snc_ecosentine_0_env_snapshot` | `wind_speed` | Decimal | Metric wind speed in km/h |
+| `wind_direction` | `x_snc_ecosentine_0_env_snapshot` | `wind_direction` | String | Cardinal direction (e.g. "WSW") |
+| `temperature` | `x_snc_ecosentine_0_env_snapshot` | `temperature` | Decimal | Degrees Celsius |
+| `weather_condition`| `x_snc_ecosentine_0_env_snapshot` | `weather_condition` | String | Descriptive weather |
+| `humidity` | `x_snc_ecosentine_0_env_snapshot` | `humidity` | Integer | Humidity percentage (0-100) |
+| `data_source` | `x_snc_ecosentine_0_env_snapshot` | `data_source` | Choice | `success`, `partial`, or `error` |
+| `agent_name` | `x_snc_ecosentine_0_agent_decisi` | `agent_name` | Choice | `severity_fusion` |
+| `input_summary` | `x_snc_ecosentine_0_agent_decisi` | `input_summary` | String | Summary of values queried |
+| `output_summary` | `x_snc_ecosentine_0_agent_decisi` | `output_summary` | String | Summary of calculations |
 
 ---
 
@@ -393,14 +393,14 @@ We log the agent decision as a **separate POST call** to the Table API rather th
 1. **scoped Application Config**: Verify the application namespace scope is correctly established.
 2. **Outbound REST Message**:
    - Navigate to **System Web Services → Outbound → REST Messages**.
-   - Create a new record: Name: `x_eco.EcoSentinel_Webhook`.
+   - Create a new record: Name: `x_snc_ecosentine_0.EcoSentinel_Webhook`.
    - Configure HTTP Method: `POST` with endpoint `https://[FASTAPI_BACKEND_URL]/webhook/complaint`.
    - Setup Http Header: `Authorization` pointing to a Scoped Connection/Credential Alias.
 3. **Integration User Account**:
    - Create user `ecosentinel.api` with `Web service access only` marked `true`.
-   - Grant only the least-privilege `x_eco.integration_user` role to `ecosentinel.api`; do not add this account to the `EcoSentinel - System Administrators` group.
+   - Grant only the least-privilege `x_snc_ecosentine_0.integration_user` role to `ecosentinel.api`; do not add this account to the `EcoSentinel - System Administrators` group.
 4. **Table API Endpoint Verification**:
-   - Ensure the endpoints `/api/now/table/x_eco_complaint`, `/api/now/table/x_eco_env_snapshot`, and `/api/now/table/x_eco_agent_log` are active in the application's configuration settings.
+   - Ensure the endpoints `/api/now/table/x_snc_ecosentine_0_complaint`, `/api/now/table/x_snc_ecosentine_0_env_snapshot`, and `/api/now/table/x_snc_ecosentine_0_agent_decisi` are active in the application's configuration settings.
 5. **Cross-Scope Privilege Records**:
    - Verify App Engine Studio has generated read/write privileges for the `ecosentinel.api` user on target custom tables.
 

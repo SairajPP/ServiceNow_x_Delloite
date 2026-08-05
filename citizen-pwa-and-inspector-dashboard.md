@@ -45,8 +45,8 @@ Instead of just a generic "Thank You", the post-submit confirmation screen (`eco
 While Now Mobile is used for *capturing data on-site*, inspectors need a way to know *which site to go to first*. This is handled by a Performance Analytics (PA) dashboard.
 
 - **Dashboard Name**: Inspector Triage & Dispatch
-- **Access**: Scoped strictly to the `x_eco.inspector` role (per `roles-groups-users.md`). Dynamic filtering ensures each inspector sees only their own assigned queue, not a global view.
-- **Data Source**: A database view joining `x_eco_complaint` and `x_eco_inspection`, leveraging the `EcoUrgencyScoreCalculator` (SI-07).
+- **Access**: Scoped strictly to the `x_snc_ecosentine_0.inspector` role (per `roles-groups-users.md`). Dynamic filtering ensures each inspector sees only their own assigned queue, not a global view.
+- **Data Source**: A database view joining `x_snc_ecosentine_0_complaint` and `x_snc_ecosentine_0_inspection`, leveraging the `EcoUrgencyScoreCalculator` (SI-07).
 
 ### Widgets on the Dashboard
 1. **Ranked Issue List**: A list widget sorted strictly by the **Composite Urgency Score** (descending). It answers "how deep is the issue" by surfacing High Severity pollution that occurs at High Risk facilities.

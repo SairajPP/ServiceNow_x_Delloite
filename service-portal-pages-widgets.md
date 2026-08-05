@@ -53,7 +53,7 @@ The Service Portal (`eco_portal`) is designed with a mobile-first, high-contrast
   - **On Submit**: Validates mandatory fields (Description, Location). Validates that a photo is attached (required for AI). Disables submit button and shows loading spinner.
   - **On Success**: Redirects to `eco_success` page with the new `sys_id` in the URL parameters.
 - **Server Script**: 
-  - Inserts a new record into `x_eco_complaint`. Returns the `sys_id` and `number` to the client.
+  - Inserts a new record into `x_snc_ecosentine_0_complaint`. Returns the `sys_id` and `number` to the client.
 - **Dependencies**: Relies on Attachment API for the photo.
 - **Error States**: spUtil error messages shown for missing mandatory fields or denied GPS permissions.
 
@@ -65,7 +65,7 @@ The Service Portal (`eco_portal`) is designed with a mobile-first, high-contrast
 - **Client Controller**:
   - Calls server with number + email. Toggles from State 1 to State 2 on success.
 - **Server Script**:
-  - Calls `x_eco.EcoComplaintUtils().lookupComplaint(number, email)` (SI-02). Does **not** perform raw GlideRecord queries in the widget to prevent data leakage. Returns state, severity, and SLA details.
+  - Calls `x_snc_ecosentine_0.EcoComplaintUtils().lookupComplaint(number, email)` (SI-02). Does **not** perform raw GlideRecord queries in the widget to prevent data leakage. Returns state, severity, and SLA details.
 - **Dependencies**: `EcoComplaintUtils` (SI-02).
 - **Error States**: "No matching complaint found" if the number/email pair is incorrect.
 
@@ -73,7 +73,7 @@ The Service Portal (`eco_portal`) is designed with a mobile-first, high-contrast
 - **Purpose**: Prominently displays the generated tracking number post-submission.
 - **HTML Structure**: Large bold text for the Tracking Number. A "Copy to Clipboard" button. A link to the Tracker page.
 - **Client Controller**: Reads `sys_id` from the URL, calls server to fetch the `number`. Implements clipboard copy.
-- **Server Script**: Simple GlideRecord get on `x_eco_complaint` to return the `number`.
+- **Server Script**: Simple GlideRecord get on `x_snc_ecosentine_0_complaint` to return the `number`.
 - **Error States**: "Invalid Request" if URL is malformed.
 
 ### 2.4 Virtual Agent Embed Widget
@@ -100,7 +100,7 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 ### Photo Capture
 - **Client-Side**: The `<input type="file" accept="image/*" capture="environment">` tag forces mobile devices to open the rear-facing camera directly, minimizing friction.
 - **Attachment Sequence**: 
-  1. The widget creates the `x_eco_complaint` record via the widget's server script first to generate the `sys_id`.
+  1. The widget creates the `x_snc_ecosentine_0_complaint` record via the widget's server script first to generate the `sys_id`.
   2. The widget immediately uploads the photo to the new `sys_id` using the ServiceNow Attachment API.
   3. The `FL-01` webhook trigger fires on complaint insert, but includes a mandatory 5-second wait step to allow the attachment upload to complete before dispatching the payload to FastAPI.
   4. This guarantees the photo is available in ServiceNow when the FastAPI backend queries for it.
@@ -111,11 +111,11 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 
 | Portal Form Field | Mapped Table | Internal Field Name | Type | Notes |
 |---|---|---|---|---|
-| Incident Location | `x_eco_complaint` | `incident_address` | String | Reverse-geocoded address or manually entered location description. Also captured: `incident_lat` and `incident_lng` for GPS coordinates via HTML5 Geolocation. |
-| Description | `x_eco_complaint` | `description` | Multi-line text | Full citizen narrative of the environmental incident. The `short_description` field is auto-derived by BR-C01 from category + location for list view display. |
+| Incident Location | `x_snc_ecosentine_0_complaint` | `incident_address` | String | Reverse-geocoded address or manually entered location description. Also captured: `incident_lat` and `incident_lng` for GPS coordinates via HTML5 Geolocation. |
+| Description | `x_snc_ecosentine_0_complaint` | `description` | Multi-line text | Full citizen narrative of the environmental incident. The `short_description` field is auto-derived by BR-C01 from category + location for list view display. |
 | Photo | `sys_attachment` | N/A | File | Attached to the complaint `sys_id`. Portal must upload photo first, then create/update complaint record only after attachment success to avoid race condition with FL-01 webhook. |
-| Email Address | `x_eco_complaint` | `citizen_email` | String | Used for tracker authentication. **Requires strict Regex validation** client-side (AngularJS) and server-side to block malicious payloads. |
-| Phone Number | `x_eco_complaint` | `citizen_phone` | String | Optional |
+| Email Address | `x_snc_ecosentine_0_complaint` | `citizen_email` | String | Used for tracker authentication. **Requires strict Regex validation** client-side (AngularJS) and server-side to block malicious payloads. |
+| Phone Number | `x_snc_ecosentine_0_complaint` | `citizen_phone` | String | Optional |
 
 ---
 
@@ -123,7 +123,7 @@ Because the AI Severity Fusion Agent (Hugging Face / OpenAI Vision) strictly req
 
 Opening a public-facing portal requires strict data security to protect PII and prevent API exhaustion.
 
-1. **Write-Only ACLs**: Unauthenticated users (the `public` role) are granted Create access to `x_eco_complaint` and `sys_attachment`, but **no Read access** globally. This means a citizen cannot query the table via REST or list views to see other complaints.
+1. **Write-Only ACLs**: Unauthenticated users (the `public` role) are granted Create access to `x_snc_ecosentine_0_complaint` and `sys_attachment`, but **no Read access** globally. This means a citizen cannot query the table via REST or list views to see other complaints.
 2. **Secure Lookup**: The Tracker Widget requires a composite key (`number` + `citizen_email`). The server script delegates this to a secure Script Include (`SI-02`) running with system privileges to fetch only the requested status string, exposing absolutely no internal data.
 3. **Abuse Prevention**: 
    - **CAPTCHA**: Planned for production. For the hackathon build, CAPTCHA is noted as a stated roadmap item. Add one-line note: "Intended approach: Google reCAPTCHA v3 for invisible bot detection, configurable threshold."
