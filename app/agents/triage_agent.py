@@ -92,7 +92,7 @@ def _log_entry(description, incident_category, output, status, start, error=None
     return AgentLogEntry(
         agent_name="triage_agent",
         agent_type="native",
-        linked_table="x_eco_complaint",
+        linked_table="x_snc_ecosentine_0_complaint",
         linked_record="",  # filled in by pipeline once sys_id is known
         input_summary=f"description={description[:200]!r} category={incident_category}",
         output_summary=f"initial_urgency={output.initial_urgency}; summary={output.summary}",

@@ -20,8 +20,11 @@ class Settings(BaseSettings):
     groq_api_key: str
     weather_api_key: str
     aqi_api_key: str
+    nvidia_api_key: str = ""
+    nvidia_vision_model: str = "meta/llama-3.2-11b-vision-instruct"
+    nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
     groq_model: str = "llama-3.3-70b-versatile"
-    groq_vision_model: str = "llama-3.2-90b-vision-preview"
+    groq_vision_model: str = "qwen/qwen3.6-27b"
     groq_base_url: str = "https://api.groq.com/openai/v1"
 
     # Behavior

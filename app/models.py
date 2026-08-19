@@ -12,7 +12,7 @@ class WebhookPing(BaseModel):
     """Section 2.1 — inbound payload from FL-01."""
     sys_id: str
     number: str
-    table: str = "x_eco_complaint"
+    table: str = "x_snc_ecosentine_0_complaint"
     lat: float
     lng: float
 
@@ -22,6 +22,27 @@ class WebhookAck(BaseModel):
     message: str = "Complaint analysis queued"
     sys_id: str
 
+
+class InspectionWebhook(BaseModel):
+    sys_id: str
+    number: str
+    table: str = "x_snc_ecosentine_0_inspection"
+    raw_notes: str
+
+
+class LegalCaseWebhook(BaseModel):
+    """Inbound payload from FL-07 when a legal case is created."""
+    record_sys_id: str
+    number: str
+    table: str = "x_snc_ecosentine_0_legal_case"
+    evidence_package: str
+
+class LeadershipWebhook(BaseModel):
+    """Inbound payload from FL-10 for generating a weekly summary."""
+    metrics: dict
+
+class LeadershipResponse(BaseModel):
+    summary: str
 
 class TriageOutput(BaseModel):
     pollution_keywords: list[str] = Field(default_factory=list)

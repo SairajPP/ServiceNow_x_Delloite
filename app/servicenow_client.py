@@ -30,8 +30,8 @@ class ServiceNowClient:
         self._timeout = settings.request_timeout_seconds
 
     async def get_complaint(self, sys_id: str) -> dict[str, Any]:
-        """Section 2.2 — GET /api/now/table/x_eco_complaint/{sys_id}"""
-        url = f"{settings.sn_table_url}/x_eco_complaint/{sys_id}"
+        """Section 2.2 — GET /api/now/table/x_snc_ecosentine_0_complaint/{sys_id}"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_complaint/{sys_id}"
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             resp = await client.get(url, auth=self._auth, headers=_json_headers())
         if resp.status_code != 200:
@@ -47,7 +47,7 @@ class ServiceNowClient:
         """
         meta_url = (
             f"{settings.sn_attachment_url}"
-            f"?sysparm_query=table_name=x_eco_complaint^table_sys_id={complaint_sys_id}"
+            f"?sysparm_query=table_sys_id={complaint_sys_id}^table_name=x_snc_ecosentine_0_complaint^ORtable_name=ZZ_YYx_snc_ecosentine_0_complaint"
         )
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             meta_resp = await client.get(meta_url, auth=self._auth, headers=_json_headers())
@@ -70,17 +70,35 @@ class ServiceNowClient:
             return file_resp.content, content_type
 
     async def patch_complaint(self, sys_id: str, fields: dict[str, Any]) -> dict[str, Any]:
-        """Section 2.7 — PATCH /api/now/table/x_eco_complaint/{sys_id}"""
-        url = f"{settings.sn_table_url}/x_eco_complaint/{sys_id}"
+        """Section 2.7 — PATCH /api/now/table/x_snc_ecosentine_0_complaint/{sys_id}"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_complaint/{sys_id}"
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             resp = await client.patch(url, auth=self._auth, headers=_json_headers(), json=fields)
         if resp.status_code != 200:
             raise ServiceNowError(f"PATCH complaint failed: {resp.text}", resp.status_code)
         return resp.json()["result"]
 
+    async def patch_inspection(self, sys_id: str, fields: dict[str, Any]) -> dict[str, Any]:
+        """PATCH /api/now/table/x_snc_ecosentine_0_inspection/{sys_id}"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_inspection/{sys_id}"
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.patch(url, auth=self._auth, headers=_json_headers(), json=fields)
+        if resp.status_code != 200:
+            raise ServiceNowError(f"PATCH inspection failed: {resp.text}", resp.status_code)
+        return resp.json()["result"]
+
+    async def patch_legal_case(self, sys_id: str, fields: dict[str, Any]) -> dict[str, Any]:
+        """PATCH /api/now/table/x_snc_ecosentine_0_legal_case/{sys_id}"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_legal_case/{sys_id}"
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.patch(url, auth=self._auth, headers=_json_headers(), json=fields)
+        if resp.status_code != 200:
+            raise ServiceNowError(f"PATCH legal_case failed: {resp.text}", resp.status_code)
+        return resp.json()["result"]
+
     async def post_snapshot(self, fields: dict[str, Any]) -> dict[str, Any]:
-        """Section 2.8 — POST /api/now/table/x_eco_env_snapshot"""
-        url = f"{settings.sn_table_url}/x_eco_env_snapshot"
+        """Section 2.8 — POST /api/now/table/x_snc_ecosentine_0_environment_snapshot"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_environment_snapshot"
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             resp = await client.post(url, auth=self._auth, headers=_json_headers(), json=fields)
         if resp.status_code != 201:
@@ -89,12 +107,12 @@ class ServiceNowClient:
 
     async def post_agent_log(self, fields: dict[str, Any]) -> dict[str, Any]:
         """
-        Section 2.9 — POST /api/now/table/x_eco_agent_log.
+        Section 2.9 — POST /api/now/table/x_snc_ecosentine_0_agent_decision_log.
         Deliberately a separate call (not bundled into the complaint PATCH)
         so the table can stay append-only under standard Table ACLs — see
         the "Architectural Note: Logging Strategy" in integration-contract.md.
         """
-        url = f"{settings.sn_table_url}/x_eco_agent_log"
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_agent_decision_log"
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             resp = await client.post(url, auth=self._auth, headers=_json_headers(), json=fields)
         if resp.status_code != 201:
@@ -102,6 +120,16 @@ class ServiceNowClient:
             logger.error("POST agent_log failed (%s): %s", resp.status_code, resp.text)
             return {}
         return resp.json()["result"]
+
+    async def post_agent_decision(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """POST /api/now/table/x_snc_ecosentine_0_agent_decision_log"""
+        url = f"{settings.sn_table_url}/x_snc_ecosentine_0_agent_decision_log"
+        async with httpx.AsyncClient(timeout=self._timeout) as client:
+            resp = await client.post(url, auth=self._auth, headers=_json_headers(), json=fields)
+        if resp.status_code != 201:
+            logger.error("POST agent decision failed (%s): %s", resp.status_code, resp.text)
+            return {}
+        return resp.json().get("result", {})
 
 
 def _json_headers() -> dict[str, str]:

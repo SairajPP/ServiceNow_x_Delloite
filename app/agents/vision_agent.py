@@ -1,9 +1,10 @@
 """
 Agent 2: OpenAI Vision Agent (External) — ai-agent-specs.md Section 2, Agent 2.
-Registered conceptually via AI Agent Fabric; here it's the actual
-GPT-4o Vision call, per integration-contract.md Section 2.4.
+Registered conceptually via AI Agent Fabric; here it runs as a Groq
+vision model call, per integration-contract.md Section 2.4.
 """
 import time
+import re
 from typing import Optional
 
 from openai import AsyncOpenAI
@@ -15,23 +16,23 @@ from app.servicenow_client import image_to_data_url
 
 logger = get_logger(__name__)
 
-_client = AsyncOpenAI(api_key=settings.groq_api_key, base_url=settings.groq_base_url)
+_client = AsyncOpenAI(api_key=settings.nvidia_api_key, base_url=settings.nvidia_base_url)
 
-SYSTEM_PROMPT = """You are an environmental incident image analyst. Analyse the provided photo
-and produce a concise, factual description of any environmental violation or
-pollution visible in the image.
+SYSTEM_PROMPT = """You are an incident image analyst. Analyse the provided photo 
+and produce a concise, factual description of any environmental violation, pollution, 
+or infrastructure damage (such as potholes or broken roads) visible in the image.
 
 TASK: Output ONLY a single sentence describing what you see. Focus on:
-- Type of pollution (smoke, effluent, waste, spill, noise source, etc.)
-- Colour, density, and extent of the visible issue
-- Any identifiable source (chimney, pipe, vehicle, construction site, etc.)
+- Type of issue (smoke, effluent, waste, spill, pothole, road damage, etc.)
+- Characteristics like colour, size, or extent of the visible issue
+- Any identifiable context (chimney, pipe, road surface, etc.)
 
 CONSTRAINTS:
-- Do NOT speculate about health impacts or legal consequences.
+- Do NOT speculate about health impacts, safety risks, or legal consequences.
 - Do NOT reference the location or suggest actions.
-- If no environmental issue is visible, output exactly:
-  "No visible environmental violation detected in the image."
-- Keep output under 100 words."""
+- If no issue is visible, output exactly: 
+  "No visible environmental or infrastructure issue detected in the image."
+- Keep output under 4000 words."""
 
 FALLBACK_CAPTION = "Image analysis unavailable"
 
@@ -48,7 +49,7 @@ async def run(image_bytes: Optional[bytes], content_type: str) -> tuple[VisionOu
 
     try:
         resp = await _client.chat.completions.create(
-            model=settings.groq_vision_model,
+            model=settings.nvidia_vision_model,
             messages=[
                 {
                     "role": "user",
@@ -58,9 +59,15 @@ async def run(image_bytes: Optional[bytes], content_type: str) -> tuple[VisionOu
                     ],
                 }
             ],
-            max_tokens=100,
+            max_tokens=1500,
         )
-        caption = resp.choices[0].message.content.strip()
+        raw_caption = resp.choices[0].message.content.strip()
+        
+        # Remove <think>...</think> blocks which some models generate
+        caption = re.sub(r'<think>.*?</think>', '', raw_caption, flags=re.DOTALL).strip()
+        if not caption:
+            caption = raw_caption # Fallback if regex stripped everything
+
         # Output adapter: raw OpenAI text -> { "caption": "..." } schema,
         # per integration-contract.md Section 2.4 field mapping note.
         output = VisionOutput(caption=caption)
@@ -78,7 +85,7 @@ def _log_entry(input_desc, output, status, start, error=None) -> AgentLogEntry:
     return AgentLogEntry(
         agent_name="openai_vision",
         agent_type="external",
-        linked_table="x_eco_complaint",
+        linked_table="x_snc_ecosentine_0_complaint",
         linked_record="",
         input_summary=input_desc,
         output_summary=f"caption={output.caption}",

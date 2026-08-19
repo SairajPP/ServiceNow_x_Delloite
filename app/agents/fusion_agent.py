@@ -59,12 +59,12 @@ Rule 4 — No image fallback:
     Reduce confidence by -15 to reflect the missing visual signal.
 
 Rule 5 — Confidence calculation:
-  - Start at 70% base confidence.
-  - All four signals agree (text + image + AQI + wind) -> +20% (up to 90%).
-  - Three signals agree -> +10% (up to 80%).
-  - Image unavailable -> -15%.
-  - Mixed signals (e.g., image shows pollution but AQI is Good) -> -10%.
-  - Final confidence is capped at 0-100.
+  - Output a realistic confidence score between 0 and 95 based on the strength of the combined evidence.
+  - Very strong, aligned evidence (e.g., clear image + corroborating AQI + detailed text): 85-95%
+  - Strong visual evidence but unrelated AQI (e.g., a pothole where AQI is irrelevant): 75-85%
+  - Mixed or weak evidence (e.g., vague text, minor issue): 50-70%
+  - Image unavailable: Cap confidence at 75%.
+  - Final confidence must be an integer between 0 and 95.
 
 OUTPUT FORMAT (strict JSON):
 {
@@ -152,7 +152,7 @@ def _log_entry(input_summary, output, status, start, error=None) -> AgentLogEntr
     return AgentLogEntry(
         agent_name="severity_fusion",
         agent_type="external",
-        linked_table="x_eco_complaint",
+        linked_table="x_snc_ecosentine_0_complaint",
         linked_record="",
         input_summary=input_summary[:2000],
         output_summary=(
