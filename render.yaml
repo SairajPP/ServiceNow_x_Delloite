@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ecosentinel-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: FASTAPI_WEBHOOK_BEARER_TOKEN
+        sync: false
+      - key: SERVICENOW_INSTANCE_URL
+        sync: false
+      - key: SERVICENOW_USER
+        sync: false
+      - key: SERVICENOW_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: WEATHER_API_KEY
+        sync: false
+      - key: AQI_API_KEY
+        sync: false
